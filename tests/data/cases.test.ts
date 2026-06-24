@@ -55,6 +55,26 @@ describe('case data', () => {
     expect(titles).not.toMatch(/Town Gate|Hell's Kitchen|White Wedding|River Crossing/i);
   });
 
+  it('uses reusable environment objects instead of evidence-only case packs', () => {
+    const rejectedEvidenceObjects = new Set(['newspaper', 'mystery-note', 'answer-sheet', 'broken-watch']);
+    const objectCases = new Map<string, Set<string>>();
+
+    for (const caseDef of cases) {
+      for (const cell of caseDef.cells) {
+        if (!cell.object) continue;
+        expect(rejectedEvidenceObjects.has(cell.object)).toBe(false);
+
+        const caseIds = objectCases.get(cell.object) ?? new Set<string>();
+        caseIds.add(caseDef.id);
+        objectCases.set(cell.object, caseIds);
+      }
+    }
+
+    const objectsUsedAcrossCases = [...objectCases.values()].filter((caseIds) => caseIds.size > 1);
+
+    expect(objectsUsedAcrossCases.length).toBeGreaterThanOrEqual(8);
+  });
+
   it('keeps localized direct clue text aligned with each solution cell', () => {
     const failures: string[] = [];
 

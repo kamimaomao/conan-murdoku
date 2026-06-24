@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { objectAssetFor, roomVisualFor, suspectPortraitFor } from '../../src/assets/conanAssets';
+import { readFileSync, statSync } from 'node:fs';
+import { conanLogo, objectAssetFor, roomVisualFor, supportPortraitFor, suspectPortraitFor } from '../../src/assets/conanAssets';
 import { cases } from '../../src/data/cases';
 import type { Suspect } from '../../src/game/types';
 
@@ -20,6 +21,22 @@ function publicPortraitExists(assetUrl: string): boolean {
   return `/public${assetUrl}` in publicPortraitAssets;
 }
 
+function publicPath(assetUrl: string): string {
+  return `public/${assetUrl.replace(/^\//, '')}`;
+}
+
+function pngSize(assetUrl: string): { width: number; height: number } {
+  const buffer = readFileSync(publicPath(assetUrl));
+  return {
+    width: buffer.readUInt32BE(16),
+    height: buffer.readUInt32BE(20)
+  };
+}
+
+function byteSize(assetUrl: string): number {
+  return statSync(publicPath(assetUrl)).size;
+}
+
 describe('Conan Murdoku art assets', () => {
   it('maps every case object to an existing cell icon', () => {
     const objects = new Set(cases.flatMap((caseDef) => caseDef.cells.map((cell) => cell.object).filter(Boolean)));
@@ -32,9 +49,9 @@ describe('Conan Murdoku art assets', () => {
   });
 
   it('maps representative rooms to distinct Conan floor groups', () => {
-    expect(roomVisualFor('agency-office').className).toBe('room-agency-office');
-    expect(roomVisualFor('cafe-counter').className).toBe('room-cafe-counter');
-    expect(roomVisualFor('agency-office').textureAsset).not.toBe(roomVisualFor('cafe-counter').textureAsset);
+    expect(roomVisualFor('agency-carpet').className).toBe('room-agency-carpet');
+    expect(roomVisualFor('cafe-wood').className).toBe('room-cafe-wood');
+    expect(roomVisualFor('agency-carpet').textureAsset).not.toBe(roomVisualFor('cafe-wood').textureAsset);
   });
 
   it('maps every case room to its own existing terrain texture', () => {
@@ -84,5 +101,47 @@ describe('Conan Murdoku art assets', () => {
         expect(suspectPortraitFor(suspect)).toMatch(/\.png$/);
       }
     }
+  });
+
+  it('keeps board object icons at 128px and under 20KB', () => {
+    const objects = new Set(cases.flatMap((caseDef) => caseDef.cells.map((cell) => cell.object).filter(Boolean)));
+
+    for (const object of objects) {
+      const asset = objectAssetFor(object)!;
+
+      expect(pngSize(asset), object).toEqual({ width: 128, height: 128 });
+      expect(byteSize(asset), object).toBeLessThanOrEqual(20_000);
+    }
+  });
+
+  it('keeps room textures compact and off the oversized AI-source path', () => {
+    const rooms = new Set(cases.flatMap((caseDef) => caseDef.cells.map((cell) => cell.room).filter(Boolean)));
+
+    for (const room of rooms) {
+      const asset = roomVisualFor(room).textureAsset;
+
+      expect(pngSize(asset), room).toEqual({ width: 256, height: 256 });
+      expect(byteSize(asset), room).toBeLessThanOrEqual(20_000);
+    }
+  });
+
+  it('keeps character portraits at 256px and under 512KB', () => {
+    const portraits = cases.flatMap((caseDef) => [
+      ...caseDef.suspects.map((suspect) => suspectPortraitFor(suspect)!),
+      supportPortraitFor(caseDef.id)
+    ]).filter((asset): asset is string => Boolean(asset));
+
+    for (const asset of new Set(portraits)) {
+      expect(pngSize(asset)).toEqual({ width: 256, height: 256 });
+      expect(byteSize(asset)).toBeLessThanOrEqual(512_000);
+    }
+  });
+
+  it('keeps the displayed logo compact', () => {
+    const size = pngSize(conanLogo);
+
+    expect(size.width).toBeLessThanOrEqual(512);
+    expect(size.height).toBeLessThanOrEqual(256);
+    expect(byteSize(conanLogo)).toBeLessThanOrEqual(512_000);
   });
 });

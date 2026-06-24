@@ -1,5 +1,5 @@
 import { type CSSProperties, type DragEvent, type PointerEvent, useMemo, useRef, useState } from 'react';
-import { conanLogo, objectAssetFor, roomVisualFor, suspectPortraitFor } from './assets/conanAssets';
+import { conanLogo, objectAssetFor, roomVisualFor, supportPortraitFor, suspectPortraitFor } from './assets/conanAssets';
 import { cases, casesById } from './data/cases';
 import {
   applyAnswer,
@@ -85,6 +85,7 @@ export default function App() {
   const currentCase = casesById[game.caseId] ?? cases[0];
   const selectedSuspect = currentCase.suspects.find((suspect) => suspect.id === game.selectedSuspectId);
   const selectedPortrait = suspectPortraitFor(selectedSuspect);
+  const supportPortrait = supportPortraitFor(currentCase.id);
   const completed = Boolean(progress.cases[currentCase.id]?.completed);
   const cellsByPosition = useMemo(
     () => new Map(currentCase.cells.map((cell) => [cellPositionKey(cell.row, cell.column), cell])),
@@ -233,6 +234,7 @@ export default function App() {
       </section>
 
       <section className="briefing" aria-label={uiText.briefing}>
+        {supportPortrait ? <img className="support-portrait" src={supportPortrait} alt="" aria-hidden="true" /> : null}
         <p>{caseIntro(currentCase)}</p>
       </section>
 
@@ -257,6 +259,11 @@ export default function App() {
             .filter(Boolean)
             .join(' ');
 
+          const cellStyle = {
+            '--accent': suspect?.accent,
+            '--terrain': `url(${roomVisual.textureAsset})`
+          } as CSSProperties;
+
           return (
             <button
               aria-label={cellLabel(cell, suspect, marked)}
@@ -269,10 +276,9 @@ export default function App() {
               onDrop={(event) => handleCellDrop(event, cell.id)}
               onPointerDown={(event) => handleCellPointerDown(event, cell.id, suspect)}
               onPointerUp={(event) => handleCellPointerUp(event, cell.id)}
-              style={{ '--accent': suspect?.accent } as CSSProperties}
+              style={cellStyle}
               type="button"
             >
-              <img className="cell-terrain-art" src={roomVisual.textureAsset} alt="" aria-hidden="true" />
               {cell.object ? (
                 <span className="cell-object">{objectName(cell.object)}</span>
               ) : (

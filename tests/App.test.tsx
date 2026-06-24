@@ -98,11 +98,15 @@ describe('App', () => {
     const { container } = render(<App />);
 
     expect(screen.getByAltText('Conan Murdoku')).toHaveAttribute('src', '/conan-assets/conan_logo.png');
-    expect(screen.getByAltText('报纸')).toHaveAttribute('src', '/conan-assets/obj_newspaper.png');
-    expect(container.querySelector('.cell-terrain-art')).toHaveAttribute(
+    expect(screen.getByAltText('办公桌')).toHaveAttribute('src', '/conan-assets/obj_office_desk.png');
+    expect(container.querySelector('.support-portrait')).toHaveAttribute(
       'src',
-      '/conan-assets/textures/room_agency-office.png'
+      '/conan-assets/support/edogawa-conan.png'
     );
+    expect(container.querySelector('.cell-terrain-art')).not.toBeInTheDocument();
+    expect(container.querySelector('.board-cell')).toHaveStyle({
+      '--terrain': 'url(/conan-assets/textures/room_agency-carpet.png)'
+    });
   });
 
   it('draws room walls only where adjacent cells belong to different rooms', () => {
@@ -141,7 +145,7 @@ describe('App', () => {
 
     await user.click(objectCell);
 
-    expect(within(objectCell).getByText('报纸')).toHaveClass('cell-object');
+    expect(within(objectCell).getByText('办公桌')).toHaveClass('cell-object');
     expect(within(objectCell).queryByText('毛利侦探事务所')).not.toBeInTheDocument();
   });
 

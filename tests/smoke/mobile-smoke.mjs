@@ -13,10 +13,10 @@ try {
   await page.getByRole('heading', { name: '毛利侦探事务所的遗失录音' }).waitFor();
 
   await page.getByRole('button', { name: '第 1 行第 2 列' }).click();
-  await page.locator('button[aria-label="第 1 行第 2 列"] .cell-object', { hasText: '报纸' }).waitFor();
+  await page.locator('button[aria-label="第 1 行第 2 列"] .cell-object', { hasText: '办公桌' }).waitFor();
 
   await page.getByRole('button', { name: '浅井编辑' }).click();
-  await page.getByText('浅井编辑说自己一直盯着报纸剪报。').waitFor();
+  await page.getByText('浅井编辑说自己一直在办公桌旁。').waitFor();
 
   await page.getByRole('button', { name: '浅井编辑' }).click();
   await page.getByRole('button', { name: '第 4 行第 4 列' }).click();
