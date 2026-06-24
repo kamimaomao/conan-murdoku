@@ -1,0 +1,6 @@
+.superpowers/
+.worktrees/
+node_modules/
+dist/
+.DS_Store
+tests/smoke/*.png

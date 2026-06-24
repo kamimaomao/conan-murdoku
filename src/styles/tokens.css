@@ -1,0 +1,16 @@
+:root {
+  --bg: #071326;
+  --panel: #0f213d;
+  --paper: #fff8df;
+  --paper-ink: #172033;
+  --text: #f8fbff;
+  --muted: #b8c7dc;
+  --accent: #ffd23f;
+  --danger: #e23b45;
+  --valid: #46d39a;
+  --border: rgba(255, 255, 255, 0.16);
+  --touch: 44px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+}
