@@ -1,5 +1,5 @@
 import { type CSSProperties, type DragEvent, type PointerEvent, useMemo, useRef, useState } from 'react';
-import { conanLogo, objectAssetFor, roomVisualFor, supportPortraitFor, suspectPortraitFor } from './assets/conanAssets';
+import { conanLogo, objectAssetFor, roomVisualFor, supportPortraitsFor, suspectPortraitFor } from './assets/conanAssets';
 import { cases, casesById } from './data/cases';
 import {
   applyAnswer,
@@ -85,7 +85,7 @@ export default function App() {
   const currentCase = casesById[game.caseId] ?? cases[0];
   const selectedSuspect = currentCase.suspects.find((suspect) => suspect.id === game.selectedSuspectId);
   const selectedPortrait = suspectPortraitFor(selectedSuspect);
-  const supportPortrait = supportPortraitFor(currentCase.id);
+  const supportPortraits = supportPortraitsFor(currentCase.id);
   const completed = Boolean(progress.cases[currentCase.id]?.completed);
   const cellsByPosition = useMemo(
     () => new Map(currentCase.cells.map((cell) => [cellPositionKey(cell.row, cell.column), cell])),
@@ -139,7 +139,8 @@ export default function App() {
   function issueText(result: ValidationResult): string {
     if (result.solved) {
       const murderer = currentCase.suspects.find((suspect) => suspect.id === currentCase.murdererId)?.name;
-      return `${uiText.caseClosed}${uiText.murdererPrefix} ${murderer}。`;
+      const culpritPrefix = currentCase.culpritLabel ? `${currentCase.culpritLabel}是` : uiText.murdererPrefix;
+      return `${uiText.caseClosed}${culpritPrefix} ${murderer}。`;
     }
     return zhIssueText(result.issues[0]);
   }
@@ -234,7 +235,13 @@ export default function App() {
       </section>
 
       <section className="briefing" aria-label={uiText.briefing}>
-        {supportPortrait ? <img className="support-portrait" src={supportPortrait} alt="" aria-hidden="true" /> : null}
+        {supportPortraits.length > 0 ? (
+          <div className={supportPortraits.length > 1 ? 'support-portrait-list multi' : 'support-portrait-list'}>
+            {supportPortraits.map((portrait) => (
+              <img className="support-portrait" src={portrait} alt="" aria-hidden="true" key={portrait} />
+            ))}
+          </div>
+        ) : null}
         <p>{caseIntro(currentCase)}</p>
       </section>
 

@@ -1,10 +1,11 @@
-import type { CaseDefinition, CellDefinition, Difficulty, Placement, Suspect } from '../../game/types';
+import type { CaseDefinition, CellDefinition, Difficulty, GridSize, Placement, Suspect } from '../../game/types';
 import { createGrid } from './grid';
 
 export interface ConanSuspectConfig {
   id: string;
   name: string;
   accent: string;
+  portraitKey?: string;
   object: string;
   room: string;
   solutionCell: `${number}-${number}`;
@@ -15,18 +16,48 @@ export interface ConanCaseConfig {
   id: string;
   title: string;
   difficulty: Difficulty;
-  size: number;
+  size: number | GridSize;
   intro: string;
+  culpritLabel?: string;
+  culpritId?: string;
   rooms: [string, string, string, string];
+  roomLayout?: string[];
+  cellObjects?: Partial<Record<`${number}-${number}`, string>>;
   support: string;
   suspects: ConanSuspectConfig[];
 }
 
-function roomForCell(row: number, column: number, size: number, rooms: ConanCaseConfig['rooms']): string {
-  const split = Math.ceil(size / 2);
-  if (row < split && column < split) return rooms[0];
-  if (row < split) return rooms[1];
-  if (column < split) return rooms[2];
+function resolveSize(size: ConanCaseConfig['size']): GridSize {
+  return typeof size === 'number' ? { rows: size, columns: size } : size;
+}
+
+function parseRoomLayout(layout: string[] | undefined, size: GridSize): string[][] | undefined {
+  if (!layout) return undefined;
+  if (layout.length !== size.rows) throw new Error(`roomLayout has ${layout.length} rows, expected ${size.rows}`);
+
+  return layout.map((row, index) => {
+    const rooms = row.trim().split(/\s+/);
+    if (rooms.length !== size.columns) {
+      throw new Error(`roomLayout row ${index + 1} has ${rooms.length} columns, expected ${size.columns}`);
+    }
+    return rooms;
+  });
+}
+
+function roomForCell(
+  row: number,
+  column: number,
+  size: GridSize,
+  rooms: ConanCaseConfig['rooms'],
+  roomLayout: string[][] | undefined
+): string {
+  if (roomLayout) return roomLayout[row][column];
+
+  const rowSplit = Math.ceil(size.rows / 2);
+  const columnSplit = Math.ceil(size.columns / 2);
+  if (row < rowSplit && column < columnSplit) return rooms[0];
+  if (row < rowSplit) return rooms[1];
+  if (column < columnSplit) return rooms[2];
   return rooms[3];
 }
 
@@ -36,15 +67,17 @@ function solutionByCell(suspects: ConanSuspectConfig[]): Record<string, ConanSus
 
 export function buildConanCase(config: ConanCaseConfig): CaseDefinition {
   const byCell = solutionByCell(config.suspects);
-  const cells = createGrid(config.size, config.size, (cell): Partial<CellDefinition> => ({
-    room: roomForCell(cell.row, cell.column, config.size, config.rooms),
-    object: byCell[cell.id]?.object
+  const size = resolveSize(config.size);
+  const roomLayout = parseRoomLayout(config.roomLayout, size);
+  const cells = createGrid(size.rows, size.columns, (cell): Partial<CellDefinition> => ({
+    room: roomForCell(cell.row, cell.column, size, config.rooms, roomLayout),
+    object: config.cellObjects?.[cell.id] ?? byCell[cell.id]?.object
   }));
   const suspects: Suspect[] = config.suspects.map((suspect, index) => ({
     id: suspect.id,
     name: suspect.name,
     accent: suspect.accent,
-    portraitKey: `${config.id}-${String.fromCharCode(97 + index)}`,
+    portraitKey: suspect.portraitKey ?? `${config.id}-${String.fromCharCode(97 + index)}`,
     clues: [suspect.clue, `${config.support}确认：${suspect.name}与${suspect.room}有关。`]
   }));
   const solution: Placement[] = config.suspects.map((suspect) => ({
@@ -56,10 +89,11 @@ export function buildConanCase(config: ConanCaseConfig): CaseDefinition {
     id: config.id,
     title: config.title,
     difficulty: config.difficulty,
-    size: { rows: config.size, columns: config.size },
+    size,
     intro: config.intro,
+    culpritLabel: config.culpritLabel,
     victimId: suspects[suspects.length - 1].id,
-    murdererId: suspects[Math.min(2, suspects.length - 2)].id,
+    murdererId: config.culpritId ?? suspects[Math.min(2, suspects.length - 2)].id,
     cells,
     suspects,
     solution
