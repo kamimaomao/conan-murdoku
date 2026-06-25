@@ -16,6 +16,7 @@
     "noUncheckedSideEffectImports": true,
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "types": ["node"],
     "skipLibCheck": true
   },
   "include": ["src", "tests"]

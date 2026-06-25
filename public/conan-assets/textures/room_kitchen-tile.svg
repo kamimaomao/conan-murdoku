@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <rect width="64" height="64" fill="#dce9e5"/>
+  <g stroke="#7aa1a5" stroke-width="1.1">
+    <path d="M16 0v64M32 0v64M48 0v64M0 16h64M0 32h64M0 48h64"/>
+  </g>
+  <g fill="#f6fbf7">
+    <rect x="1" y="1" width="14" height="14" rx="1"/>
+    <rect x="33" y="1" width="14" height="14" rx="1"/>
+    <rect x="17" y="17" width="14" height="14" rx="1"/>
+    <rect x="49" y="17" width="14" height="14" rx="1"/>
+    <rect x="1" y="33" width="14" height="14" rx="1"/>
+    <rect x="33" y="33" width="14" height="14" rx="1"/>
+    <rect x="17" y="49" width="14" height="14" rx="1"/>
+    <rect x="49" y="49" width="14" height="14" rx="1"/>
+  </g>
+  <g fill="#d65757" opacity=".58">
+    <path d="M24 8l3 3-3 3-3-3z"/>
+    <path d="M56 40l3 3-3 3-3-3z"/>
+    <path d="M8 56l3 3-3 3-3-3z"/>
+  </g>
+  <g fill="none" stroke="#22383a" stroke-linecap="round" opacity=".28">
+    <path d="M3 14c4-2 8-2 12 0"/>
+    <path d="M35 30c7 3 14 2 22-1"/>
+    <path d="M20 61c6-3 13-3 21 0"/>
+  </g>
+</svg>

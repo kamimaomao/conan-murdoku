@@ -151,10 +151,34 @@ h2 {
 }
 
 .briefing {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin: 8px 0 10px;
   padding: 10px 12px;
   font-size: 13px;
   line-height: 1.35;
+}
+
+.support-portrait-list {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+}
+
+.support-portrait {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  background: #0b1c36;
+  object-fit: cover;
+}
+
+.support-portrait-list.multi .support-portrait {
+  width: 38px;
+  height: 38px;
 }
 
 .briefing p {
@@ -185,7 +209,10 @@ h2 {
   padding: 2px;
   border: 1px solid rgba(83, 58, 34, 0.34);
   border-radius: 4px;
-  background: #d9c38c;
+  background-color: #d9c38c;
+  background-image: var(--terrain);
+  background-position: center;
+  background-size: cover;
   color: #3b281d;
   isolation: isolate;
   overflow: hidden;
@@ -238,16 +265,6 @@ h2 {
 
 .board-cell.marked {
   background: #8f8377;
-}
-
-.cell-terrain-art {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  pointer-events: none;
 }
 
 .cell-room,

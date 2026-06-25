@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <rect width="64" height="64" fill="#eadfce"/>
+  <g stroke="#cdbda8" stroke-width="1">
+    <path d="M16 0v64M32 0v64M48 0v64M0 16h64M0 32h64M0 48h64"/>
+  </g>
+  <g fill="#f6efe5">
+    <rect x="1" y="1" width="14" height="14" rx="1"/>
+    <rect x="33" y="1" width="14" height="14" rx="1"/>
+    <rect x="17" y="17" width="14" height="14" rx="1"/>
+    <rect x="49" y="17" width="14" height="14" rx="1"/>
+    <rect x="1" y="33" width="14" height="14" rx="1"/>
+    <rect x="33" y="33" width="14" height="14" rx="1"/>
+    <rect x="17" y="49" width="14" height="14" rx="1"/>
+    <rect x="49" y="49" width="14" height="14" rx="1"/>
+  </g>
+  <g fill="#b94d55" opacity=".62">
+    <path d="M8 8c0-3 5-4 6 0 1-4 6-3 6 0 0 4-6 8-6 8s-6-4-6-8z" transform="scale(.5) translate(8 8)"/>
+    <path d="M8 8c0-3 5-4 6 0 1-4 6-3 6 0 0 4-6 8-6 8s-6-4-6-8z" transform="scale(.5) translate(72 72)"/>
+    <path d="M8 8c0-3 5-4 6 0 1-4 6-3 6 0 0 4-6 8-6 8s-6-4-6-8z" transform="scale(.5) translate(72 8)"/>
+    <path d="M8 8c0-3 5-4 6 0 1-4 6-3 6 0 0 4-6 8-6 8s-6-4-6-8z" transform="scale(.5) translate(8 72)"/>
+  </g>
+  <g fill="none" stroke="#47362e" stroke-linecap="round" opacity=".28">
+    <path d="M3 30c7-3 15-2 23 1"/>
+    <path d="M36 15c8 2 16 1 25-1"/>
+    <path d="M18 62c8-3 17-3 28 0"/>
+  </g>
+</svg>

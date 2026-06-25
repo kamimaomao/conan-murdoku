@@ -1,0 +1,39 @@
+{
+  "method": "procedural green spritesheet, fixed coordinate slicing, 256x256 seamless room textures",
+  "size": 256,
+  "files": {
+    "agency-carpet": "generated-ground-tiles-slices/room_agency-carpet.png",
+    "arcade-tile": "generated-ground-tiles-slices/room_arcade-tile.png",
+    "backstage-rubber": "generated-ground-tiles-slices/room_backstage-rubber.png",
+    "beach-deck": "generated-ground-tiles-slices/room_beach-deck.png",
+    "bridge-metal": "generated-ground-tiles-slices/room_bridge-metal.png",
+    "cafe-wood": "generated-ground-tiles-slices/room_cafe-wood.png",
+    "hotel-carpet": "generated-ground-tiles-slices/room_hotel-carpet.png",
+    "hotel-stone": "generated-ground-tiles-slices/room_hotel-stone.png",
+    "kitchen-tile": "generated-ground-tiles-slices/room_kitchen-tile.png",
+    "lodge-wood": "generated-ground-tiles-slices/room_lodge-wood.png",
+    "school-wood": "generated-ground-tiles-slices/room_school-wood.png",
+    "snow-path": "generated-ground-tiles-slices/room_snow-path.png",
+    "train-carpet": "generated-ground-tiles-slices/room_train-carpet.png",
+    "wedding-carpet": "generated-ground-tiles-slices/room_wedding-carpet.png",
+    "default": "generated-ground-tiles-slices/room_default.png"
+  },
+  "rooms": [
+    "agency-carpet",
+    "arcade-tile",
+    "backstage-rubber",
+    "beach-deck",
+    "bridge-metal",
+    "cafe-wood",
+    "hotel-carpet",
+    "hotel-stone",
+    "kitchen-tile",
+    "lodge-wood",
+    "school-wood",
+    "snow-path",
+    "train-carpet",
+    "wedding-carpet",
+    "default"
+  ],
+  "note": "default tile adjusted to cool slate so each tile has a distinct dominant color."
+}

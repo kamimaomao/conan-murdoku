@@ -1,0 +1,40 @@
+{
+  "source": "generated-image-ground-tiles-slices",
+  "method": "image-generated tiles with offset seam softening post-process",
+  "size": 256,
+  "files": {
+    "agency-carpet": "generated-image-ground-tiles-seamless-slices/room_agency-carpet.png",
+    "arcade-tile": "generated-image-ground-tiles-seamless-slices/room_arcade-tile.png",
+    "backstage-rubber": "generated-image-ground-tiles-seamless-slices/room_backstage-rubber.png",
+    "beach-deck": "generated-image-ground-tiles-seamless-slices/room_beach-deck.png",
+    "bridge-metal": "generated-image-ground-tiles-seamless-slices/room_bridge-metal.png",
+    "cafe-wood": "generated-image-ground-tiles-seamless-slices/room_cafe-wood.png",
+    "hotel-carpet": "generated-image-ground-tiles-seamless-slices/room_hotel-carpet.png",
+    "hotel-stone": "generated-image-ground-tiles-seamless-slices/room_hotel-stone.png",
+    "kitchen-tile": "generated-image-ground-tiles-seamless-slices/room_kitchen-tile.png",
+    "lodge-wood": "generated-image-ground-tiles-seamless-slices/room_lodge-wood.png",
+    "school-wood": "generated-image-ground-tiles-seamless-slices/room_school-wood.png",
+    "snow-path": "generated-image-ground-tiles-seamless-slices/room_snow-path.png",
+    "train-carpet": "generated-image-ground-tiles-seamless-slices/room_train-carpet.png",
+    "wedding-carpet": "generated-image-ground-tiles-seamless-slices/room_wedding-carpet.png",
+    "default": "generated-image-ground-tiles-seamless-slices/room_default.png"
+  },
+  "rooms": [
+    "agency-carpet",
+    "arcade-tile",
+    "backstage-rubber",
+    "beach-deck",
+    "bridge-metal",
+    "cafe-wood",
+    "hotel-carpet",
+    "hotel-stone",
+    "kitchen-tile",
+    "lodge-wood",
+    "school-wood",
+    "snow-path",
+    "train-carpet",
+    "wedding-carpet",
+    "default"
+  ],
+  "note": "train-carpet hue shifted to deep teal so every room tile has a distinct dominant color."
+}
