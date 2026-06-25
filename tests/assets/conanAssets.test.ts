@@ -5,16 +5,24 @@ import { cases } from '../../src/data/cases';
 import type { Suspect } from '../../src/game/types';
 
 const publicPngAssets = import.meta.glob('/public/conan-assets/*.png', { eager: true, query: '?url', import: 'default' });
+const publicSvgAssets = import.meta.glob('/public/conan-assets/*.svg', { eager: true, query: '?url', import: 'default' });
 const publicTextureAssets = import.meta.glob('/public/conan-assets/textures/*.svg', { eager: true, query: '?url', import: 'default' });
 const publicPortraitAssets = import.meta.glob('/public/conan-assets/portraits/*.png', { eager: true, query: '?url', import: 'default' });
 const legacyAssetRoot = `${'murdoku'}-assets`;
 const plannedObjectKeys = [
+  'barrel',
   'bed',
   'blackboard-eraser',
   'bookshelf',
+  'boulder',
   'bench',
+  'bonsai',
+  'box',
   'camera',
+  'car',
   'cash-register',
+  'carpet',
+  'cactus',
   'champagne-tower',
   'chair',
   'coat-rack',
@@ -31,8 +39,10 @@ const plannedObjectKeys = [
   'director-chair',
   'filing-cabinet',
   'fireplace',
+  'flag',
   'flower-arch',
   'flower-pot',
+  'flowers',
   'front-desk-bell',
   'gift-box',
   'glass',
@@ -50,13 +60,22 @@ const plannedObjectKeys = [
   'observation-rail',
   'office-desk',
   'oil-lantern',
+  'oil-slick',
   'parasol',
+  'paint-spill',
+  'path',
   'plate',
+  'plant',
   'potted-plant',
+  'puddle',
   'prep-table',
   'prop-box',
   'refrigerator',
   'round-table',
+  'rubble',
+  'sand',
+  'shelf',
+  'shrub',
   'script-paper',
   'school-bag',
   'school-desk',
@@ -67,19 +86,25 @@ const plannedObjectKeys = [
   'streetlamp',
   'suitcase',
   'telephone',
+  'table',
   'ticket',
   'ticket-clip',
   'train-door',
   'train-seat',
   'trash-bin',
+  'trashcan',
+  'statue',
+  'tree',
   'umbrella-stand',
   'vanity-mirror',
   'vending-machine',
-  'voice-changer'
+  'voice-changer',
+  'horse',
+  'tv'
 ];
 
 function publicAssetExists(assetUrl: string): boolean {
-  return `/public${assetUrl}` in publicPngAssets;
+  return `/public${assetUrl}` in publicPngAssets || `/public${assetUrl}` in publicSvgAssets;
 }
 
 function publicTextureExists(assetUrl: string): boolean {
@@ -185,7 +210,7 @@ describe('Conan Murdoku art assets', () => {
     for (const caseDef of cases) {
       for (const cell of caseDef.cells) {
         const objectAsset = objectAssetFor(cell.object);
-        if (objectAsset) expect(objectAsset).toMatch(/\.png$/);
+        if (objectAsset) expect(objectAsset).toMatch(/\.(png|svg)$/);
         expect(roomVisualFor(cell.room).textureAsset).toMatch(/\.svg$/);
       }
       for (const suspect of caseDef.suspects) {
@@ -197,10 +222,14 @@ describe('Conan Murdoku art assets', () => {
   it('keeps board object icons compact enough for mobile loading', () => {
     for (const object of plannedObjectKeys) {
       const asset = objectAssetFor(object)!;
-      const size = pngSize(asset);
 
-      expect(size.width, object).toBeLessThanOrEqual(192);
-      expect(size.height, object).toBeLessThanOrEqual(192);
+      if (asset.endsWith('.png')) {
+        const size = pngSize(asset);
+        expect(size.width, object).toBeLessThanOrEqual(192);
+        expect(size.height, object).toBeLessThanOrEqual(192);
+      } else {
+        expect(svgViewBox(asset), object).toBe('0 0 192 192');
+      }
       expect(byteSize(asset), object).toBeLessThanOrEqual(120_000);
     }
   });

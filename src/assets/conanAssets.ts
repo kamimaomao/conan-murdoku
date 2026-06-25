@@ -1,14 +1,23 @@
 const assetRoot = `${import.meta.env.BASE_URL}conan-assets/`;
 
 export const conanLogo = `${assetRoot}conan_logo.png`;
+export const conanHeaderBanner = `${assetRoot}conan-header-banner.png`;
 
 const objectAssets: Record<string, string> = {
   'blackboard-eraser': 'obj_blackboard_eraser.png',
   bed: 'obj_bed.png',
+  bear: 'obj_shrub.svg',
+  barrel: 'obj_box.svg',
   bookshelf: 'obj_bookshelf.png',
+  boulder: 'obj_boulder.svg',
   bench: 'obj_bench.png',
+  bonsai: 'obj_potted_plant.png',
+  box: 'obj_box.svg',
   camera: 'obj_camera.png',
+  car: 'obj_car.svg',
   'cash-register': 'obj_cash_register.png',
+  carpet: 'obj_carpet.svg',
+  cactus: 'obj_cactus.svg',
   'champagne-tower': 'obj_champagne_tower.png',
   chair: 'obj_chair.png',
   'coat-rack': 'obj_coat_rack.png',
@@ -21,6 +30,7 @@ const objectAssets: Record<string, string> = {
   'cutting-board': 'obj_cutting_board.png',
   'deck-chair': 'obj_deck_chair.png',
   'detective-badge': 'obj_detective_badge.png',
+  door: 'obj_train_door.png',
   'dining-table': 'obj_dining_table.png',
   'director-chair': 'obj_director_chair.png',
   'filing-cabinet': 'obj_filing_cabinet.png',
@@ -44,13 +54,20 @@ const objectAssets: Record<string, string> = {
   'observation-rail': 'obj_observation_rail.png',
   'office-desk': 'obj_office_desk.png',
   'oil-lantern': 'obj_oil_lantern.png',
+  'oil-slick': 'obj_oil_slick.svg',
   parasol: 'obj_parasol.png',
+  'paint-spill': 'obj_paint_spill.svg',
   plate: 'obj_plate.png',
+  plant: 'obj_potted_plant.png',
   'potted-plant': 'obj_potted_plant.png',
+  puddle: 'obj_puddle.svg',
   'prep-table': 'obj_prep_table.png',
   'prop-box': 'obj_prop_box.png',
   refrigerator: 'obj_refrigerator.png',
+  register: 'obj_cash_register.png',
   'round-table': 'obj_round_table.png',
+  shelf: 'obj_bookshelf.png',
+  shrub: 'obj_shrub.svg',
   'script-paper': 'obj_script_paper.png',
   'school-bag': 'obj_school_bag.png',
   'school-desk': 'obj_school_desk.png',
@@ -61,15 +78,27 @@ const objectAssets: Record<string, string> = {
   streetlamp: 'obj_streetlamp.png',
   suitcase: 'obj_suitcase.png',
   telephone: 'obj_telephone.png',
+  'teddy-bear': 'obj_box.svg',
+  table: 'obj_dining_table.png',
   ticket: 'obj_ticket.png',
   'ticket-clip': 'obj_ticket_clip.png',
   'train-door': 'obj_train_door.png',
   'train-seat': 'obj_train_seat.png',
   'trash-bin': 'obj_trash_bin.png',
+  trashcan: 'obj_trash_bin.png',
   'umbrella-stand': 'obj_umbrella_stand.png',
   'vanity-mirror': 'obj_vanity_mirror.png',
   'vending-machine': 'obj_vending_machine.png',
-  'voice-changer': 'obj_voice_changer.png'
+  'voice-changer': 'obj_voice_changer.png',
+  horse: 'obj_horse.svg',
+  flag: 'obj_ticket.png',
+  flowers: 'obj_shrub.svg',
+  path: 'obj_carpet.svg',
+  rubble: 'obj_boulder.svg',
+  sand: 'obj_carpet.svg',
+  statue: 'obj_boulder.svg',
+  tree: 'obj_shrub.svg',
+  tv: 'obj_monitor_screen.png'
 };
 
 const roomTextureAssets: Record<string, string> = {
@@ -85,6 +114,11 @@ const roomTextureAssets: Record<string, string> = {
   'beach-changing-room': 'hotel-stone',
   'beach-sea': 'bridge-metal',
   'beach-tower': 'beach-deck',
+  'barber-entrance': 'agency-carpet',
+  'barber-main-area': 'hotel-carpet',
+  'barber-staff-room': 'kitchen-tile',
+  'barber-storage': 'kitchen-tile',
+  'barber-waiting-area': 'train-carpet',
   'book-discussion': 'cafe-wood',
   'book-library': 'lodge-wood',
   'book-refreshments': 'wedding-carpet',
@@ -103,6 +137,29 @@ const roomTextureAssets: Record<string, string> = {
   'delivery-front-yard': 'snow-path',
   'delivery-kitchen': 'kitchen-tile',
   'delivery-porch': 'beach-deck',
+  'flower-counter': 'agency-carpet',
+  'flower-preparation': 'kitchen-tile',
+  'flower-storage': 'lodge-wood',
+  'flower-store-floor': 'cafe-wood',
+  'horse-canyon': 'hotel-stone',
+  'horse-desert': 'snow-path',
+  'horse-shack': 'lodge-wood',
+  'kiosk-1': 'arcade-tile',
+  'kiosk-2': 'cafe-wood',
+  'kiosk-library': 'lodge-wood',
+  'kiosk-walkway': 'hotel-stone',
+  'netflix-bedroom': 'hotel-carpet',
+  'netflix-hall': 'agency-carpet',
+  'netflix-kitchen': 'kitchen-tile',
+  'netflix-living': 'lodge-wood',
+  'paint-gallery': 'hotel-carpet',
+  'paint-kitchen': 'kitchen-tile',
+  'paint-storage': 'lodge-wood',
+  'paint-studio': 'backstage-rubber',
+  'car-garage': 'bridge-metal',
+  'car-lot': 'hotel-stone',
+  'car-office': 'agency-carpet',
+  'car-waiting': 'hotel-carpet',
   'kitchen-dining': 'cafe-wood',
   'kitchen-kitchen': 'kitchen-tile',
   'kitchen-reception': 'backstage-rubber',
@@ -119,6 +176,14 @@ const roomTextureAssets: Record<string, string> = {
   'polo-entry': 'arcade-tile',
   'polo-kitchen': 'kitchen-tile',
   'polo-seats': 'wedding-carpet',
+  'party-dining': 'cafe-wood',
+  'party-hall': 'hotel-carpet',
+  'party-kitchen': 'kitchen-tile',
+  'party-living': 'lodge-wood',
+  'riding-pasture': 'snow-path',
+  'riding-stable': 'lodge-wood',
+  'riding-tool-shed': 'bridge-metal',
+  'riding-training-ring': 'snow-path',
   'school-classroom': 'school-wood',
   'school-hall': 'agency-carpet',
   'school-library': 'lodge-wood',
@@ -149,7 +214,7 @@ const supportPortraitAssets: Record<string, string[]> = {
     'support/kojima-genta.png'
   ],
   'case-04': ['support/amuro-cafe-detective.png'],
-  'case-05': ['support/edogawa-conan.png'],
+  'case-05': ['support/megure-inspector.png'],
   'case-06': ['support/sonoko-suzuki.png'],
   'case-07': ['support/ai-haibara.png'],
   'case-08': ['support/mouri-ran.png'],
@@ -161,6 +226,27 @@ function normalizeAssetName(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
+const fallbackRoomTextures = [
+  'hotel-carpet',
+  'agency-carpet',
+  'lodge-wood',
+  'kitchen-tile',
+  'hotel-stone',
+  'train-carpet',
+  'bridge-metal',
+  'snow-path',
+  'cafe-wood',
+  'arcade-tile',
+  'wedding-carpet',
+  'backstage-rubber'
+];
+
+function fallbackRoomTexture(slug: string): string {
+  let hash = 0;
+  for (const char of slug) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return fallbackRoomTextures[hash % fallbackRoomTextures.length];
+}
+
 export function objectAssetFor(objectName: string | undefined): string | undefined {
   if (!objectName) return undefined;
   const asset = objectAssets[normalizeAssetName(objectName)];
@@ -169,7 +255,7 @@ export function objectAssetFor(objectName: string | undefined): string | undefin
 
 export function roomVisualFor(roomName: string | undefined): RoomVisual {
   const slug = roomName ? normalizeAssetName(roomName) : 'default';
-  const textureSlug = roomTextureAssets[slug] ?? slug;
+  const textureSlug = roomTextureAssets[slug] ?? fallbackRoomTexture(slug);
   return {
     className: `room-${slug}`,
     textureAsset: `${assetRoot}textures/room_${textureSlug}.svg`

@@ -49,5 +49,19 @@ export function validateCaseData(caseDef: CaseDefinition): string[] {
     }
   }
 
+  for (const constraint of caseDef.clueConstraints) {
+    if (!suspectIds.has(constraint.suspectId)) {
+      errors.push(`${caseDef.id}: unknown clue suspect ${constraint.suspectId}`);
+    }
+
+    if (constraint.type === 'direction-of' && !suspectIds.has(constraint.targetSuspectId)) {
+      errors.push(`${caseDef.id}: unknown clue target suspect ${constraint.targetSuspectId}`);
+    }
+
+    if (constraint.type === 'alone-with-victim' && constraint.victimId && !suspectIds.has(constraint.victimId)) {
+      errors.push(`${caseDef.id}: unknown clue victim ${constraint.victimId}`);
+    }
+  }
+
   return errors;
 }

@@ -23,7 +23,10 @@ const testCase: CaseDefinition = {
   solution: [
     { suspectId: 'ada', cellId: '0-0' },
     { suspectId: 'victim', cellId: '1-1' }
-  ]
+  ],
+  clueConstraints: [],
+  generalClues: [],
+  keyItems: []
 };
 
 describe('validateBoard', () => {
@@ -120,5 +123,98 @@ describe('validateBoard', () => {
     expect(result.solved).toBe(false);
     expect(result.issues[0]).toMatchObject({ type: 'wrong-placement', suspectId: 'ada' });
     expect(result.issues[0]?.message).not.toContain('0-0');
+  });
+
+  it('checks clue constraints before accepting a complete board', () => {
+    const result = validateBoard(
+      {
+        ...testCase,
+        clueConstraints: [{ type: 'beside-object', suspectId: 'ada', object: 'plant' }],
+        cells: [
+          { id: '0-0', row: 0, column: 0 },
+          { id: '0-1', row: 0, column: 1, object: 'plant' },
+          { id: '1-0', row: 1, column: 0 },
+          { id: '1-1', row: 1, column: 1 }
+        ]
+      },
+      {
+        placements: { '1-0': 'ada', '0-1': 'victim' },
+        marks: {}
+      }
+    );
+
+    expect(result.solved).toBe(false);
+    expect(result.issues[0]).toMatchObject({ type: 'clue-violation', suspectId: 'ada' });
+  });
+
+  it('enforces room-limited beside-object clues', () => {
+    const result = validateBoard(
+      {
+        ...testCase,
+        size: { rows: 3, columns: 3 },
+        cells: [
+          { id: '0-0', row: 0, column: 0, room: 'waiting' },
+          { id: '0-1', row: 0, column: 1, room: 'waiting', object: 'shelf' },
+          { id: '0-2', row: 0, column: 2, room: 'waiting' },
+          { id: '1-0', row: 1, column: 0, room: 'storage' },
+          { id: '1-1', row: 1, column: 1, room: 'storage' },
+          { id: '1-2', row: 1, column: 2, room: 'storage', object: 'shelf' },
+          { id: '2-0', row: 2, column: 0, room: 'other' },
+          { id: '2-1', row: 2, column: 1, room: 'other' },
+          { id: '2-2', row: 2, column: 2, room: 'other' }
+        ],
+        solution: [
+          { suspectId: 'ada', cellId: '1-1' },
+          { suspectId: 'victim', cellId: '2-2' }
+        ],
+        clueConstraints: [{ type: 'beside-object', suspectId: 'ada', object: 'shelf', rooms: ['waiting'] }]
+      },
+      {
+        placements: { '1-1': 'ada', '2-2': 'victim' },
+        marks: {}
+      }
+    );
+
+    expect(result.solved).toBe(false);
+    expect(result.issues[0]).toMatchObject({ type: 'clue-violation', suspectId: 'ada' });
+  });
+
+  it('enforces alone beside-object clues', () => {
+    const result = validateBoard(
+      {
+        ...testCase,
+        size: { rows: 3, columns: 3 },
+        victimId: 'victim',
+        murdererId: 'ada',
+        cells: [
+          { id: '0-0', row: 0, column: 0, room: 'staff' },
+          { id: '0-1', row: 0, column: 1, room: 'staff', object: 'tv' },
+          { id: '0-2', row: 0, column: 2, room: 'staff' },
+          { id: '1-0', row: 1, column: 0, room: 'staff' },
+          { id: '1-1', row: 1, column: 1, room: 'other' },
+          { id: '1-2', row: 1, column: 2, room: 'staff' },
+          { id: '2-0', row: 2, column: 0, room: 'other' },
+          { id: '2-1', row: 2, column: 1, room: 'other' },
+          { id: '2-2', row: 2, column: 2, room: 'other' }
+        ],
+        suspects: [
+          ...testCase.suspects,
+          { id: 'babbage', name: 'Babbage', accent: '#7aa7ff', portraitKey: 'babbage', clues: ['Babbage clue'] }
+        ],
+        solution: [
+          { suspectId: 'ada', cellId: '0-0' },
+          { suspectId: 'babbage', cellId: '1-2' },
+          { suspectId: 'victim', cellId: '2-1' }
+        ],
+        clueConstraints: [{ type: 'beside-object', suspectId: 'ada', object: 'tv', alone: true }]
+      },
+      {
+        placements: { '0-0': 'ada', '1-2': 'babbage', '2-1': 'victim' },
+        marks: {}
+      }
+    );
+
+    expect(result.solved).toBe(false);
+    expect(result.issues[0]).toMatchObject({ type: 'clue-violation', suspectId: 'ada' });
   });
 });

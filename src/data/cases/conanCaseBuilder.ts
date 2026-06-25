@@ -1,4 +1,13 @@
-import type { CaseDefinition, CellDefinition, Difficulty, GridSize, Placement, Suspect } from '../../game/types';
+import type {
+  CaseDefinition,
+  CaseScene,
+  CellDefinition,
+  ClueConstraint,
+  Difficulty,
+  GridSize,
+  Placement,
+  Suspect
+} from '../../game/types';
 import { createGrid } from './grid';
 
 export interface ConanSuspectConfig {
@@ -6,10 +15,11 @@ export interface ConanSuspectConfig {
   name: string;
   accent: string;
   portraitKey?: string;
-  object: string;
+  gender?: Suspect['gender'];
+  object?: string;
   room: string;
   solutionCell: `${number}-${number}`;
-  clue: string;
+  clue: string | string[];
 }
 
 export interface ConanCaseConfig {
@@ -20,9 +30,13 @@ export interface ConanCaseConfig {
   intro: string;
   culpritLabel?: string;
   culpritId?: string;
-  rooms: [string, string, string, string];
+  rooms: [string, string, string, string, ...string[]];
   roomLayout?: string[];
   cellObjects?: Partial<Record<`${number}-${number}`, string>>;
+  scene?: CaseScene;
+  clueConstraints?: ClueConstraint[];
+  generalClues?: string[];
+  keyItems?: string[];
   support: string;
   suspects: ConanSuspectConfig[];
 }
@@ -65,6 +79,15 @@ function solutionByCell(suspects: ConanSuspectConfig[]): Record<string, ConanSus
   return Object.fromEntries(suspects.map((suspect) => [suspect.solutionCell, suspect]));
 }
 
+function clueTextForSuspect(suspect: ConanSuspectConfig, constraints: ClueConstraint[] | undefined): string[] {
+  const clueTexts = constraints
+    ?.filter((constraint) => constraint.suspectId === suspect.id)
+    .map((constraint) => constraint.text)
+    .filter((text): text is string => Boolean(text));
+
+  return clueTexts && clueTexts.length > 0 ? clueTexts : Array.isArray(suspect.clue) ? suspect.clue : [suspect.clue];
+}
+
 export function buildConanCase(config: ConanCaseConfig): CaseDefinition {
   const byCell = solutionByCell(config.suspects);
   const size = resolveSize(config.size);
@@ -78,7 +101,8 @@ export function buildConanCase(config: ConanCaseConfig): CaseDefinition {
     name: suspect.name,
     accent: suspect.accent,
     portraitKey: suspect.portraitKey ?? `${config.id}-${String.fromCharCode(97 + index)}`,
-    clues: [suspect.clue, `${config.support}确认：${suspect.name}与${suspect.room}有关。`]
+    gender: suspect.gender,
+    clues: clueTextForSuspect(suspect, config.clueConstraints)
   }));
   const solution: Placement[] = config.suspects.map((suspect) => ({
     suspectId: suspect.id,
@@ -96,6 +120,10 @@ export function buildConanCase(config: ConanCaseConfig): CaseDefinition {
     murdererId: config.culpritId ?? suspects[Math.min(2, suspects.length - 2)].id,
     cells,
     suspects,
-    solution
+    solution,
+    clueConstraints: config.clueConstraints ?? [],
+    generalClues: config.generalClues ?? [],
+    keyItems: config.keyItems ?? [],
+    scene: config.scene
   };
 }

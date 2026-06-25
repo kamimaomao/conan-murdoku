@@ -1,367 +1,587 @@
-import type { CaseDefinition } from '../../game/types';
-import { buildConanCase, type ConanCaseConfig } from './conanCaseBuilder';
+import type { CaseDefinition, CaseScene, Difficulty, GridSize } from '../../game/types';
+import { buildConanCase, type ConanCaseConfig, type ConanSuspectConfig } from './conanCaseBuilder';
 
-const configs: ConanCaseConfig[] = [
+const roomRow = (rooms: string[]): string => rooms.join(' ');
+
+interface CastMember {
+  key: string;
+  name: string;
+  accent: string;
+  portraitKey: string;
+  gender: 'female' | 'male';
+}
+
+interface SourceCaseSpec {
+  id: string;
+  title: string;
+  original: string;
+  difficulty: Difficulty;
+  size: GridSize;
+  keyItems: string[];
+  roomLabels: string[];
+  clueTexts: string[];
+  generalClues?: string[];
+  cast?: string[];
+}
+
+const castMembers: Record<string, CastMember> = {
+  conan: { key: 'conan', name: '江户川柯南', accent: '#2d7dd2', portraitKey: 'cast-edogawa-conan', gender: 'male' },
+  ran: { key: 'ran', name: '毛利兰', accent: '#ef476f', portraitKey: 'cast-mouri-ran', gender: 'female' },
+  ayumi: { key: 'ayumi', name: '吉田步美', accent: '#ffb703', portraitKey: 'cast-yoshida-ayumi', gender: 'female' },
+  mitsuhiko: { key: 'mitsuhiko', name: '圆谷光彦', accent: '#06d6a0', portraitKey: 'cast-tsuburaya-mitsuhiko', gender: 'male' },
+  kogoro: { key: 'kogoro', name: '毛利小五郎', accent: '#8d5524', portraitKey: 'cast-mouri-kogoro', gender: 'male' },
+  agasa: { key: 'agasa', name: '阿笠博士', accent: '#80ed99', portraitKey: 'cast-agasa-professor', gender: 'male' },
+  genta: { key: 'genta', name: '小岛元太', accent: '#8bd450', portraitKey: 'cast-kojima-genta', gender: 'male' },
+  ai: { key: 'ai', name: '灰原哀', accent: '#9b5de5', portraitKey: 'cast-ai-haibara', gender: 'female' },
+  heiji: { key: 'heiji', name: '服部平次', accent: '#2a9d8f', portraitKey: 'cast-heiji-hattori', gender: 'male' },
+  kazuha: { key: 'kazuha', name: '远山和叶', accent: '#ffb703', portraitKey: 'cast-kazuha-toyama', gender: 'female' },
+  sonoko: { key: 'sonoko', name: '铃木园子', accent: '#f72585', portraitKey: 'cast-sonoko-suzuki', gender: 'female' },
+  amuro: { key: 'amuro', name: '安室透', accent: '#f4a261', portraitKey: 'cast-amuro-cafe-detective', gender: 'male' },
+  kid: { key: 'kid', name: '怪盗基德', accent: '#f8f9fa', portraitKey: 'cast-kaito-kid', gender: 'male' },
+  megure: { key: 'megure', name: '目暮警官', accent: '#a88c5f', portraitKey: 'cast-megure-inspector', gender: 'male' },
+  sato: { key: 'sato', name: '佐藤刑警', accent: '#d55d92', portraitKey: 'cast-sato-detective', gender: 'female' },
+  takagi: { key: 'takagi', name: '高木刑警', accent: '#5b8def', portraitKey: 'cast-takagi-detective', gender: 'male' }
+};
+
+const defaultCast = [
+  'conan',
+  'ran',
+  'ayumi',
+  'mitsuhiko',
+  'kogoro',
+  'agasa',
+  'genta',
+  'ai',
+  'heiji',
+  'kazuha',
+  'sonoko',
+  'amuro',
+  'kid',
+  'megure',
+  'sato',
+  'takagi'
+];
+
+const sourceCases: SourceCaseSpec[] = [
   {
     id: 'case-01',
-    title: '阿笠博士家的可乐失踪',
-    difficulty: 'very-easy',
-    size: 5,
-    intro: '阿笠博士家冰箱里的可乐少了一瓶。先从熟人圈开始：每名角色只出现一次，每行每列最多一人。',
-    culpritLabel: '偷喝可乐的人',
-    culpritId: 'case01-genta',
-    rooms: ['agasa-lab', 'agasa-living', 'agasa-yard', 'agasa-kitchen'],
-    roomLayout: [
-      'agasa-lab agasa-lab agasa-living agasa-living agasa-living',
-      'agasa-lab agasa-lab agasa-living agasa-living agasa-living',
-      'agasa-yard agasa-yard agasa-kitchen agasa-kitchen agasa-kitchen',
-      'agasa-yard agasa-yard agasa-kitchen agasa-kitchen agasa-kitchen',
-      'agasa-yard agasa-yard agasa-kitchen agasa-kitchen agasa-kitchen'
+    title: '花店清晨的未送花束',
+    original: 'The Flower Store',
+    difficulty: 'easy',
+    size: { rows: 7, columns: 7 },
+    keyItems: ['bonsai', 'carpet', 'chair'],
+    roomLabels: ['店面', '收银区', '办公室', '装卸区', '花束准备区'],
+    clueTexts: [
+      '柯南在盆景旁。',
+      '小兰在花束准备区。',
+      '步美站在地毯上。',
+      '光彦坐在椅子上。',
+      '小五郎在第一列。',
+      '园子在店面区域；她所在区域还有一名男性。',
+      '元太是受害者，和犯人单独在同一区域。'
     ],
-    cellObjects: {
-      '0-1': 'refrigerator',
-      '1-4': 'telephone',
-      '2-0': 'detective-badge',
-      '2-4': 'coffee-cup',
-      '3-3': 'soccer-ball',
-      '4-2': 'school-bag'
-    },
-    support: '阿笠博士',
-    suspects: [
-      { id: 'case01-conan', name: '江户川柯南', accent: '#2d7dd2', portraitKey: 'cast-edogawa-conan', room: '足球', object: 'soccer-ball', solutionCell: '3-3', clue: '柯南最后停在第 4 行第 4 列的足球旁。' },
-      { id: 'case01-ran', name: '毛利兰', accent: '#ef476f', portraitKey: 'cast-mouri-ran', room: '电话旁', object: 'telephone', solutionCell: '1-4', clue: '小兰接电话的位置在第 2 行第 5 列。' },
-      { id: 'case01-ayumi', name: '吉田步美', accent: '#ffb703', portraitKey: 'cast-yoshida-ayumi', room: '侦探徽章', object: 'detective-badge', solutionCell: '2-0', clue: '步美一直守着第 3 行的侦探徽章。' },
-      { id: 'case01-mitsuhiko', name: '圆谷光彦', accent: '#06d6a0', portraitKey: 'cast-tsuburaya-mitsuhiko', room: '书包', object: 'school-bag', solutionCell: '4-2', clue: '光彦的书包在第 5 行第 3 列。' },
-      { id: 'case01-genta', name: '小岛元太', accent: '#8bd450', portraitKey: 'cast-kojima-genta', room: '冰箱', object: 'refrigerator', solutionCell: '0-1', clue: '元太靠近第 1 行的冰箱。' }
-    ]
+    cast: ['conan', 'ran', 'ayumi', 'mitsuhiko', 'kogoro', 'sonoko', 'genta']
   },
   {
     id: 'case-02',
-    title: '毛利侦探事务所的碎花瓶',
+    title: '里斯本书亭旁的垃圾桶',
+    original: 'The Book Kiosk',
     difficulty: 'easy',
-    size: 5,
-    intro: '事务所的花瓶碎在会客区。小兰把大家的位置写成线索，找出真正打翻花瓶的人。',
-    culpritLabel: '打翻花瓶的人',
-    culpritId: 'case02-kogoro',
-    rooms: ['agency-office', 'agency-window', 'agency-entry', 'agency-living'],
-    support: '小兰',
-    suspects: [
-      { id: 'case02-conan', name: '江户川柯南', accent: '#2d7dd2', portraitKey: 'cast-edogawa-conan', room: '变声器旁', object: 'voice-changer', solutionCell: '0-3', clue: '柯南把变声器放在第 1 行第 4 列。' },
-      { id: 'case02-ran', name: '毛利兰', accent: '#ef476f', portraitKey: 'cast-mouri-ran', room: '花盆旁', object: 'flower-pot', solutionCell: '1-0', clue: '小兰在第 2 行的花盆旁整理碎片。' },
-      { id: 'case02-kogoro', name: '毛利小五郎', accent: '#8d5524', portraitKey: 'cast-mouri-kogoro', room: '沙发', object: 'sofa', solutionCell: '2-4', clue: '毛利小五郎的拖鞋停在第 3 行第 5 列的沙发边。' },
-      { id: 'case02-sonoko', name: '铃木园子', accent: '#f72585', portraitKey: 'cast-sonoko-suzuki', room: '照相机', object: 'camera', solutionCell: '3-1', clue: '园子拍照的位置在第 4 行第 2 列。' },
-      { id: 'case02-agasa', name: '阿笠博士', accent: '#80ed99', portraitKey: 'cast-agasa-professor', room: '资料柜', object: 'filing-cabinet', solutionCell: '4-2', clue: '阿笠博士查看资料柜的位置在第 5 行第 3 列。' }
-    ]
+    size: { rows: 5, columns: 5 },
+    keyItems: ['table', 'trashcan', 'shelf'],
+    roomLabels: ['2号书亭', '通道', '1号书亭', '书库'],
+    clueTexts: [
+      '柯南在 1 号书亭。',
+      '小兰在桌子旁。',
+      '步美和小兰不在同一区域。',
+      '光彦在垃圾桶旁。',
+      '小五郎是受害者，和犯人单独在同一区域。'
+    ],
+    cast: ['conan', 'ran', 'ayumi', 'mitsuhiko', 'kogoro']
   },
   {
     id: 'case-03',
-    title: '帝丹小学的侦探徽章恶作剧',
+    title: '骑术课后的马厩铃声',
+    original: 'The Riding Lesson',
     difficulty: 'easy',
-    size: 6,
-    intro: '少年侦探团的备用徽章被藏起来了。灰原把大家下课后的移动路线压缩成 6x6 棋盘。',
-    culpritLabel: '藏起侦探徽章的人',
-    culpritId: 'case03-genta',
-    rooms: ['school-classroom', 'school-hall', 'school-yard', 'school-library'],
-    support: '灰原',
-    suspects: [
-      { id: 'case03-conan', name: '江户川柯南', accent: '#2d7dd2', portraitKey: 'cast-edogawa-conan', room: '徽章盒', object: 'detective-badge', solutionCell: '0-5', clue: '柯南检查徽章盒的位置在第 1 行第 6 列。' },
-      { id: 'case03-ai', name: '灰原哀', accent: '#9b5de5', portraitKey: 'cast-ai-haibara', room: '储物柜', object: 'locker', solutionCell: '1-2', clue: '灰原在第 2 行的储物柜旁。' },
-      { id: 'case03-ayumi', name: '吉田步美', accent: '#ffb703', portraitKey: 'cast-yoshida-ayumi', room: '书包', object: 'school-bag', solutionCell: '2-4', clue: '步美的书包在第 3 行第 5 列。' },
-      { id: 'case03-mitsuhiko', name: '圆谷光彦', accent: '#06d6a0', portraitKey: 'cast-tsuburaya-mitsuhiko', room: '课桌', object: 'school-desk', solutionCell: '3-1', clue: '光彦靠着第 4 行第 2 列的课桌。' },
-      { id: 'case03-genta', name: '小岛元太', accent: '#8bd450', portraitKey: 'cast-kojima-genta', room: '黑板擦', object: 'blackboard-eraser', solutionCell: '4-3', clue: '元太的黑板擦在第 5 行第 4 列。' },
-      { id: 'case03-agasa', name: '阿笠博士', accent: '#80ed99', portraitKey: 'cast-agasa-professor', room: '自动售货机', object: 'vending-machine', solutionCell: '5-0', clue: '阿笠博士在第 6 行的自动售货机旁等大家。' }
+    size: { rows: 9, columns: 9 },
+    keyItems: ['shrub', 'table', 'horse', 'puddle'],
+    roomLabels: ['训练场', '马厩', '工具棚', '牧场'],
+    clueTexts: [
+      '柯南在灌木旁。',
+      '小兰在桌子旁。',
+      '步美在一名骑在马上的女性以西一列。',
+      '光彦在第五列。',
+      '小五郎在马厩。',
+      '阿笠博士骑在训练场的马背上。',
+      '元太在工具棚，和小兰同一区域。',
+      '灰原站在泥坑上。',
+      '服部平次是受害者，在最后剩下的位置。'
     ]
   },
   {
     id: 'case-04',
-    title: '波洛咖啡厅的三明治错拿',
-    difficulty: 'easy',
-    size: 6,
-    intro: '波洛咖啡厅的三明治被人拿错。安室把吧台、座位和后厨线索拆成更密的 6x6 练习。',
-    culpritLabel: '拿错三明治的人',
-    culpritId: 'case04-kogoro',
-    rooms: ['polo-counter', 'polo-kitchen', 'polo-seats', 'polo-entry'],
-    roomLayout: [
-      'polo-counter polo-counter polo-counter polo-kitchen polo-kitchen polo-kitchen',
-      'polo-counter polo-counter polo-seats polo-seats polo-kitchen polo-kitchen',
-      'polo-entry polo-counter polo-seats polo-seats polo-seats polo-kitchen',
-      'polo-entry polo-entry polo-seats polo-seats polo-seats polo-seats',
-      'polo-entry polo-entry polo-counter polo-counter polo-seats polo-seats',
-      'polo-entry polo-entry polo-entry polo-counter polo-counter polo-seats'
-    ],
-    cellObjects: {
-      '0-1': 'coffee-cup',
-      '0-4': 'menu-board',
-      '1-4': 'menu-board',
-      '2-5': 'cutting-board',
-      '3-0': 'counter-stool',
-      '3-4': 'round-table',
-      '4-2': 'cash-register',
-      '5-3': 'coffee-table',
-      '5-5': 'umbrella-stand'
-    },
-    support: '安室',
-    suspects: [
-      { id: 'case04-amuro', name: '安室透', accent: '#f4a261', portraitKey: 'cast-amuro-cafe-detective', room: '咖啡杯', object: 'coffee-cup', solutionCell: '0-1', clue: '安室透确认咖啡杯在第 1 行第 2 列。' },
-      { id: 'case04-ran', name: '毛利兰', accent: '#ef476f', portraitKey: 'cast-mouri-ran', room: '菜单板', object: 'menu-board', solutionCell: '1-4', clue: '小兰看菜单的位置在第 2 行第 5 列。' },
-      { id: 'case04-conan', name: '江户川柯南', accent: '#2d7dd2', portraitKey: 'cast-edogawa-conan', room: '砧板', object: 'cutting-board', solutionCell: '2-5', clue: '柯南检查第 3 行第 6 列的砧板。' },
-      { id: 'case04-sonoko', name: '铃木园子', accent: '#f72585', portraitKey: 'cast-sonoko-suzuki', room: '高脚凳', object: 'counter-stool', solutionCell: '3-0', clue: '园子坐在第 4 行的高脚凳旁。' },
-      { id: 'case04-kogoro', name: '毛利小五郎', accent: '#8d5524', portraitKey: 'cast-mouri-kogoro', room: '收银机', object: 'cash-register', solutionCell: '4-2', clue: '毛利小五郎停在第 5 行第 3 列的收银机旁。' },
-      { id: 'case04-ai', name: '灰原哀', accent: '#9b5de5', portraitKey: 'cast-ai-haibara', room: '茶几', object: 'coffee-table', solutionCell: '5-3', clue: '灰原在第 6 行第 4 列的茶几旁。' }
+    title: '白色婚礼后的静默',
+    original: 'White Wedding',
+    difficulty: 'medium',
+    size: { rows: 9, columns: 9 },
+    keyItems: ['table', 'plant', 'carpet', 'chair', 'tree'],
+    roomLabels: ['礼堂', '西庭院', '洞窟', '门廊', '东庭院', '祭坛'],
+    generalClues: ['有一名男性和一名女性站在祭坛上。'],
+    clueTexts: [
+      '柯南在桌子旁。',
+      '小兰在花丛旁。',
+      '步美在第五列。',
+      '光彦在步美东北方向。',
+      '小五郎在自己区域的角落。',
+      '阿笠博士所在区域里，有人站在树旁。',
+      '元太坐在椅子上。',
+      '灰原在门廊。',
+      '服部平次是受害者，和犯人单独在同一区域。'
     ]
   },
   {
     id: 'case-05',
-    title: '服部平次的护身符风波',
-    difficulty: 'easy',
-    size: 6,
-    intro: '服部平次来东京找柯南，和叶的护身符却被人拿错。这里仍是生活化误会，但角色开始扩展。',
-    culpritLabel: '拿错护身符的人',
-    culpritId: 'case05-heiji',
-    rooms: ['osaka-room', 'osaka-kitchen', 'osaka-entry', 'osaka-street'],
-    roomLayout: [
-      'osaka-room osaka-room osaka-entry osaka-entry osaka-street osaka-street',
-      'osaka-room osaka-kitchen osaka-kitchen osaka-entry osaka-street osaka-street',
-      'osaka-room osaka-kitchen osaka-kitchen osaka-kitchen osaka-entry osaka-street',
-      'osaka-room osaka-room osaka-kitchen osaka-entry osaka-entry osaka-street',
-      'osaka-street osaka-room osaka-room osaka-room osaka-entry osaka-entry',
-      'osaka-street osaka-street osaka-room osaka-room osaka-room osaka-entry'
-    ],
-    cellObjects: {
-      '0-4': 'ticket',
-      '1-1': 'gift-box',
-      '1-4': 'umbrella-stand',
-      '2-5': 'soccer-ball',
-      '3-2': 'coffee-cup',
-      '4-0': 'vending-machine',
-      '4-4': 'streetlamp',
-      '5-3': 'suitcase'
-    },
-    support: '柯南',
-    suspects: [
-      { id: 'case05-heiji', name: '服部平次', accent: '#2a9d8f', portraitKey: 'cast-heiji-hattori', room: '车票', object: 'ticket', solutionCell: '0-4', clue: '服部平次把车票放在第 1 行第 5 列。' },
-      { id: 'case05-kazuha', name: '远山和叶', accent: '#ffb703', portraitKey: 'cast-kazuha-toyama', room: '护身符盒', object: 'gift-box', solutionCell: '1-1', clue: '和叶的护身符盒在第 2 行第 2 列。' },
-      { id: 'case05-conan', name: '江户川柯南', accent: '#2d7dd2', portraitKey: 'cast-edogawa-conan', room: '足球', object: 'soccer-ball', solutionCell: '2-5', clue: '柯南站在第 3 行第 6 列的足球旁。' },
-      { id: 'case05-ran', name: '毛利兰', accent: '#ef476f', portraitKey: 'cast-mouri-ran', room: '咖啡杯', object: 'coffee-cup', solutionCell: '3-2', clue: '小兰端着第 4 行第 3 列的咖啡杯。' },
-      { id: 'case05-kogoro', name: '毛利小五郎', accent: '#8d5524', portraitKey: 'cast-mouri-kogoro', room: '自动售货机', object: 'vending-machine', solutionCell: '4-0', clue: '毛利小五郎在第 5 行的自动售货机旁。' },
-      { id: 'case05-sonoko', name: '铃木园子', accent: '#f72585', portraitKey: 'cast-sonoko-suzuki', room: '行李箱', object: 'suitcase', solutionCell: '5-3', clue: '园子的行李箱在第 6 行第 4 列。' }
+    title: '突然来客后的客厅',
+    original: 'Surprise Visitors',
+    difficulty: 'medium',
+    size: { rows: 9, columns: 9 },
+    keyItems: ['tv', 'bed', 'table', 'plant', 'shelf', 'chair', 'carpet'],
+    roomLabels: ['客厅', '餐厅', '客房', '浴室', '主卧', '厨房'],
+    clueTexts: [
+      '柯南在电视旁。',
+      '小兰在床上。',
+      '步美在最后一列。',
+      '光彦在桌子旁。',
+      '小五郎是唯一在植物旁的人。',
+      '阿笠博士在书架旁。',
+      '元太在床旁。',
+      '灰原坐在椅子上。',
+      '服部平次是受害者，和犯人单独在同一区域。'
     ]
   },
   {
     id: 'case-06',
-    title: '铃木美术馆的珠宝失窃案：谁放走了怪盗基德',
-    difficulty: 'easy',
-    size: 7,
-    intro: '铃木美术馆的宝石失踪，怪盗基德也混进人群。这里开始进入真正的案件线。',
-    culpritLabel: '放走怪盗基德的人',
-    culpritId: 'case06-sonoko',
-    rooms: ['museum-gallery', 'museum-vault', 'museum-stage', 'museum-exit'],
-    roomLayout: [
-      'museum-gallery museum-gallery museum-gallery museum-stage museum-stage museum-vault museum-vault',
-      'museum-gallery museum-stage museum-stage museum-stage museum-vault museum-vault museum-vault',
-      'museum-gallery museum-gallery museum-stage museum-stage museum-stage museum-vault museum-exit',
-      'museum-exit museum-gallery museum-gallery museum-stage museum-vault museum-vault museum-exit',
-      'museum-exit museum-exit museum-gallery museum-gallery museum-stage museum-stage museum-exit',
-      'museum-exit museum-gallery museum-gallery museum-vault museum-vault museum-stage museum-stage',
-      'museum-exit museum-exit museum-gallery museum-gallery museum-vault museum-vault museum-stage'
-    ],
-    cellObjects: {
-      '0-6': 'vanity-mirror',
-      '1-1': 'gift-box',
-      '1-5': 'light-stand',
-      '2-4': 'camera',
-      '3-0': 'skateboard',
-      '3-3': 'champagne-tower',
-      '4-5': 'flower-pot',
-      '5-2': 'ticket',
-      '5-5': 'costume-rack',
-      '6-3': 'suitcase'
-    },
-    support: '园子',
-    suspects: [
-      { id: 'case06-kid', name: '怪盗基德', accent: '#f8f9fa', portraitKey: 'cast-kaito-kid', room: '化妆镜', object: 'vanity-mirror', solutionCell: '0-6', clue: '怪盗基德出现在第 1 行第 7 列的化妆镜旁。' },
-      { id: 'case06-sonoko', name: '铃木园子', accent: '#f72585', portraitKey: 'cast-sonoko-suzuki', room: '礼盒', object: 'gift-box', solutionCell: '1-1', clue: '园子抱着第 2 行第 2 列的礼盒。' },
-      { id: 'case06-kogoro', name: '毛利小五郎', accent: '#8d5524', portraitKey: 'cast-mouri-kogoro', room: '摄影机', object: 'camera', solutionCell: '2-4', clue: '毛利小五郎检查第 3 行第 5 列的摄影机。' },
-      { id: 'case06-conan', name: '江户川柯南', accent: '#2d7dd2', portraitKey: 'cast-edogawa-conan', room: '滑板', object: 'skateboard', solutionCell: '3-0', clue: '柯南的滑板在第 4 行第 1 列。' },
-      { id: 'case06-ran', name: '毛利兰', accent: '#ef476f', portraitKey: 'cast-mouri-ran', room: '花盆', object: 'flower-pot', solutionCell: '4-5', clue: '小兰在第 5 行第 6 列的花盆旁。' },
-      { id: 'case06-heiji', name: '服部平次', accent: '#2a9d8f', portraitKey: 'cast-heiji-hattori', room: '票据', object: 'ticket', solutionCell: '5-2', clue: '服部平次拿着第 6 行第 3 列的票据。' },
-      { id: 'case06-kazuha', name: '远山和叶', accent: '#ffb703', portraitKey: 'cast-kazuha-toyama', room: '行李箱', object: 'suitcase', solutionCell: '6-3', clue: '和叶的行李箱在第 7 行第 4 列。' }
+    title: '冻雨夜别墅里的脚印',
+    original: 'Freezing Rain',
+    difficulty: 'medium',
+    size: { rows: 9, columns: 9 },
+    keyItems: ['bed', 'chair', 'puddle', 'carpet'],
+    roomLabels: ['地下室', '卧室', '车道', '庭院', '客厅', '洗手间', '厨房'],
+    clueTexts: [
+      '柯南在洗手间。',
+      '小兰和床上的人单独在同一区域。',
+      '步美坐在椅子上。',
+      '光彦站在水洼上。',
+      '小五郎不在角落。',
+      '阿笠博士在厨房。',
+      '元太是唯一站在地毯上的人。',
+      '灰原在客厅，紧挨墙边；墙另一侧没有人。',
+      '服部平次是受害者，和犯人单独在同一区域。'
     ]
   },
   {
     id: 'case-07',
-    title: '料理棚的无声事故',
-    difficulty: 'medium',
-    size: 8,
-    intro: "本案参考 Hell's Kitchen 的 8x8 密集厨房布局，改写为电视台料理棚。",
-    rooms: ['kitchen-tile', 'backstage-rubber', 'cafe-wood', 'hotel-carpet'],
-    roomLayout: [
-      'kitchen-kitchen kitchen-kitchen kitchen-kitchen kitchen-kitchen kitchen-kitchen kitchen-restroom kitchen-restroom kitchen-restroom',
-      'kitchen-kitchen kitchen-kitchen kitchen-kitchen kitchen-kitchen kitchen-kitchen kitchen-kitchen kitchen-restroom kitchen-restroom',
-      'kitchen-kitchen kitchen-kitchen kitchen-kitchen kitchen-kitchen kitchen-kitchen kitchen-kitchen kitchen-restroom kitchen-restroom',
-      'kitchen-kitchen kitchen-kitchen kitchen-kitchen kitchen-kitchen kitchen-kitchen kitchen-restroom kitchen-restroom kitchen-restroom',
-      'kitchen-reception kitchen-dining kitchen-dining kitchen-dining kitchen-dining kitchen-dining kitchen-dining kitchen-dining',
-      'kitchen-reception kitchen-dining kitchen-dining kitchen-dining kitchen-dining kitchen-dining kitchen-dining kitchen-dining',
-      'kitchen-reception kitchen-reception kitchen-dining kitchen-dining kitchen-dining kitchen-dining kitchen-dining kitchen-dining',
-      'kitchen-reception kitchen-reception kitchen-dining kitchen-dining kitchen-dining kitchen-dining kitchen-dining kitchen-dining'
-    ],
-    cellObjects: {
-      '0-2': 'cooking-pot',
-      '0-7': 'cooking-pot',
-      '1-1': 'cutting-board',
-      '1-5': 'prep-table',
-      '2-4': 'prep-table',
-      '3-6': 'plate',
-      '4-0': 'camera',
-      '4-2': 'round-table',
-      '5-3': 'monitor-screen',
-      '5-6': 'potted-plant',
-      '6-5': 'counter-stool',
-      '7-2': 'trash-bin',
-      '7-6': 'chair'
-    },
-    support: '灰原',
-    suspects: [
-      { id: 'case07-chef', name: '大仓主厨', accent: '#ff595e', room: '主灶台', object: 'cooking-pot', solutionCell: '0-7', clue: '大仓主厨一直守着汤锅。' },
-      { id: 'case07-assistant', name: '藤田助理', accent: '#1982c4', room: '备料台', object: 'cutting-board', solutionCell: '1-1', clue: '藤田助理在第 2 行的砧板旁。' },
-      { id: 'case07-prop', name: '赤城道具师', accent: '#6a4c93', room: '道具台', object: 'prep-table', solutionCell: '2-4', clue: '赤城道具师靠近备料台。' },
-      { id: 'case07-taster', name: '栗原试吃员', accent: '#8ac926', room: '品评席', object: 'plate', solutionCell: '3-6', clue: '栗原试吃员的餐盘在第 7 列。' },
-      { id: 'case07-camera', name: '广田摄影', accent: '#ffca3a', room: '机位区', object: 'camera', solutionCell: '4-0', clue: '广田摄影检查过摄影机。' },
-      { id: 'case07-writer', name: '神崎编剧', accent: '#00bbf9', room: '监看区', object: 'monitor-screen', solutionCell: '5-3', clue: '神崎编剧在第 6 行的监看屏旁。' },
-      { id: 'case07-guest', name: '真田嘉宾', accent: '#f15bb5', room: '嘉宾席', object: 'counter-stool', solutionCell: '6-5', clue: '真田嘉宾旁边有高脚凳。' },
-      { id: 'case07-victim', name: '二阶堂评审', accent: '#9b5de5', room: '评审席', object: 'trash-bin', solutionCell: '7-2', clue: '二阶堂评审倒在最后一行的垃圾桶旁。' }
+    title: '翻乱公寓里的泥迹',
+    original: 'A Messy Situation',
+    difficulty: 'hard',
+    size: { rows: 9, columns: 9 },
+    keyItems: ['puddle', 'tree', 'chair', 'table', 'shelf'],
+    roomLabels: ['后院', '前院', '门廊', '客厅', '厨房', '洗手间', '卧室'],
+    generalClues: ['现场没有空区域。'],
+    clueTexts: [
+      '柯南独自一人。',
+      '小兰在柯南东南方向，并在灰原西北方向。',
+      '步美站在泥坑上。',
+      '光彦和步美单独在同一区域。',
+      '小五郎在树旁。',
+      '阿笠博士站在泥坑上。',
+      '元太坐在椅子上，并且正好在阿笠博士以北一行。',
+      '灰原不在桌子旁。',
+      '服部平次是受害者，和犯人单独在同一区域。'
     ]
   },
   {
     id: 'case-08',
-    title: '婚礼会场的无声证言',
-    difficulty: 'medium',
-    size: 9,
-    intro: '本案参考 White Wedding 的 9x9 会场结构，改写为婚礼会场证词。',
-    rooms: ['wedding-carpet', 'hotel-carpet', 'cafe-wood', 'agency-carpet'],
-    roomLayout: [
-      'wedding-west-court wedding-west-court wedding-chapel wedding-altar wedding-altar wedding-altar wedding-chapel wedding-east-court wedding-east-court',
-      'wedding-west-court wedding-west-court wedding-chapel wedding-altar wedding-altar wedding-altar wedding-chapel wedding-east-court wedding-east-court',
-      'wedding-west-court wedding-west-court wedding-chapel wedding-chapel wedding-altar wedding-chapel wedding-chapel wedding-east-court wedding-east-court',
-      'wedding-west-court wedding-west-court wedding-chapel wedding-chapel wedding-altar wedding-chapel wedding-chapel wedding-east-court wedding-east-court',
-      'wedding-west-court wedding-west-court wedding-chapel wedding-chapel wedding-altar wedding-chapel wedding-chapel wedding-east-court wedding-east-court',
-      'wedding-west-court wedding-west-court wedding-chapel wedding-chapel wedding-altar wedding-chapel wedding-chapel wedding-east-court wedding-east-court',
-      'wedding-west-court wedding-west-court wedding-chapel wedding-chapel wedding-chapel wedding-chapel wedding-chapel wedding-east-court wedding-east-court',
-      'wedding-west-court wedding-west-court wedding-west-court wedding-porch wedding-porch wedding-porch wedding-east-court wedding-east-court wedding-east-court',
-      'wedding-west-court wedding-west-court wedding-west-court wedding-porch wedding-porch wedding-porch wedding-east-court wedding-east-court wedding-east-court'
-    ],
-    cellObjects: {
-      '0-8': 'flower-arch',
-      '1-1': 'dining-table',
-      '1-4': 'flower-pot',
-      '2-4': 'champagne-tower',
-      '3-7': 'microphone',
-      '4-0': 'camera',
-      '4-4': 'flower-pot',
-      '5-2': 'chair',
-      '6-5': 'gift-box',
-      '7-3': 'keycard',
-      '8-6': 'coat-rack'
-    },
-    support: '小兰',
-    suspects: [
-      { id: 'case08-bride', name: '白石新娘', accent: '#e5989b', room: '主舞台', object: 'flower-arch', solutionCell: '0-8', clue: '白石新娘站在第 9 列的花拱门旁。' },
-      { id: 'case08-groom', name: '远山新郎', accent: '#355070', room: '誓约台', object: 'dining-table', solutionCell: '1-1', clue: '远山新郎站在第 2 行的餐桌旁。' },
-      { id: 'case08-planner', name: '真锅策划', accent: '#6d597a', room: '控场区', object: 'champagne-tower', solutionCell: '2-4', clue: '真锅策划一直在香槟塔旁。' },
-      { id: 'case08-violinist', name: '三枝琴手', accent: '#b56576', room: '乐队席', object: 'microphone', solutionCell: '3-7', clue: '三枝琴手的麦克风在第 8 列。' },
-      { id: 'case08-photographer', name: '加贺摄影师', accent: '#eaac8b', room: '拍照区', object: 'camera', solutionCell: '4-0', clue: '加贺摄影师靠近摄影机。' },
-      { id: 'case08-server', name: '岛田侍者', accent: '#00afb9', room: '餐台', object: 'chair', solutionCell: '5-2', clue: '岛田侍者负责摆放椅子。' },
-      { id: 'case08-designer', name: '南条设计师', accent: '#f07167', room: '更衣间', object: 'gift-box', solutionCell: '6-5', clue: '南条设计师的礼盒在第 7 行。' },
-      { id: 'case08-manager', name: '雨宫经理', accent: '#0081a7', room: '酒店走廊', object: 'keycard', solutionCell: '7-3', clue: '雨宫经理保管房卡。' },
-      { id: 'case08-victim', name: '宫园司仪', accent: '#fdfcdc', room: '后台门', object: 'coat-rack', solutionCell: '8-6', clue: '宫园司仪倒在最后一行的衣帽架旁。' }
+    title: '废弃博物馆的深夜展厅',
+    original: 'The Abandoned Museum',
+    difficulty: 'hard',
+    size: { rows: 9, columns: 9 },
+    keyItems: ['chair', 'table', 'statue', 'rubble'],
+    roomLabels: ['大厅', '抽象艺术展区', '金库', '展览厅', '安保室', '咖啡区', '洗手间', '主展厅'],
+    clueTexts: [
+      '柯南正好在小五郎以西一列。',
+      '小兰坐在椅子上，且和一名男性单独同区。',
+      '步美在第一列，并且在柯南以南。',
+      '光彦在桌子旁。',
+      '小五郎所在区域里有一名坐在椅子上的男性。',
+      '阿笠博士在雕像旁。',
+      '元太在雕像或碎石旁。',
+      '灰原在碎石旁，且不在大厅。',
+      '服部平次是受害者，在最后剩下的位置。'
     ]
   },
   {
     id: 'case-09',
-    title: '湖畔山庄暴雪前夜',
+    title: '约会餐厅里的无声晚餐',
+    original: 'Date Night',
     difficulty: 'hard',
-    size: 9,
-    intro: '本案参考 Lakeside Cabin 的 9x9 山庄结构，改写为暴雪前夜。',
-    rooms: ['lodge-wood', 'snow-path', 'hotel-carpet', 'bridge-metal'],
-    roomLayout: [
-      'cabin-forest-west cabin-forest-west cabin-forest-west cabin-forest-west cabin-forest-west cabin-forest-east cabin-forest-east cabin-forest-east cabin-forest-east',
-      'cabin-forest-west cabin-forest-west cabin-forest-west cabin-forest-west cabin-forest-west cabin-forest-east cabin-forest-east cabin-forest-east cabin-forest-east',
-      'cabin-forest-west cabin-forest-west cabin-forest-west cabin-forest-west cabin-lake cabin-lake cabin-forest-east cabin-forest-east cabin-forest-east',
-      'cabin-forest-west cabin-forest-west cabin-forest-west cabin-lake cabin-lake cabin-lake cabin-lake cabin-forest-east cabin-forest-east',
-      'cabin-forest-west cabin-forest-west cabin-lake cabin-lake cabin-lake cabin-lake cabin-lake cabin-forest-east cabin-forest-east',
-      'cabin-forest-west cabin-forest-west cabin-lake cabin-lake cabin-lake cabin-lake cabin-lake cabin-lake cabin-forest-east',
-      'cabin-forest-west cabin-forest-west cabin-forest-west cabin-lake cabin-lake cabin-cabin cabin-cabin cabin-cabin cabin-cabin',
-      'cabin-shed cabin-forest-west cabin-forest-west cabin-forest-west cabin-forest-west cabin-cabin cabin-cabin cabin-cabin cabin-cabin',
-      'cabin-shed cabin-shed cabin-forest-west cabin-forest-west cabin-forest-west cabin-cabin cabin-cabin cabin-cabin cabin-cabin'
-    ],
-    cellObjects: {
-      '0-7': 'fireplace',
-      '1-0': 'snow-boot',
-      '2-5': 'bench',
-      '3-8': 'coffee-table',
-      '4-1': 'bookshelf',
-      '5-3': 'lifebuoy',
-      '6-6': 'sofa',
-      '7-4': 'suitcase',
-      '8-2': 'oil-lantern',
-      '8-6': 'chair'
-    },
-    support: '阿笠博士',
-    suspects: [
-      { id: 'case09-owner', name: '榎本老板', accent: '#386641', room: '山庄大厅', object: 'fireplace', solutionCell: '0-7', clue: '榎本老板站在第 8 列的壁炉旁。' },
-      { id: 'case09-climber', name: '久我登山客', accent: '#bc4749', room: '雪道入口', object: 'snow-boot', solutionCell: '1-0', clue: '久我登山客的雪靴在第 2 行。' },
-      { id: 'case09-guide', name: '相马向导', accent: '#f2e8cf', room: '码头', object: 'bench', solutionCell: '2-5', clue: '相马向导坐在长椅旁。' },
-      { id: 'case09-writer', name: '雾岛作家', accent: '#a7c957', room: '壁炉旁', object: 'coffee-table', solutionCell: '3-8', clue: '雾岛作家的茶几在第 9 列。' },
-      { id: 'case09-nurse', name: '高梨护士', accent: '#6a994e', room: '医药柜', object: 'bookshelf', solutionCell: '4-1', clue: '高梨护士靠近书架。' },
-      { id: 'case09-fisher', name: '松永钓客', accent: '#00a6fb', room: '湖边窗', object: 'lifebuoy', solutionCell: '5-3', clue: '松永钓客在第 6 行。' },
-      { id: 'case09-student', name: '朝仓学生', accent: '#0582ca', room: '客房走廊', object: 'sofa', solutionCell: '6-6', clue: '朝仓学生在第 7 行的沙发旁。' },
-      { id: 'case09-driver', name: '片濑司机', accent: '#006494', room: '车库门', object: 'suitcase', solutionCell: '7-4', clue: '片濑司机保管行李箱。' },
-      { id: 'case09-victim', name: '神原摄影家', accent: '#003554', room: '露台', object: 'oil-lantern', solutionCell: '8-2', clue: '神原摄影家倒在最后一行的油灯旁。' }
+    size: { rows: 9, columns: 9 },
+    keyItems: ['tree', 'statue', 'chair', 'table'],
+    roomLabels: ['情人桥', '河道', '咖啡区', '公园', '小径', '广场'],
+    generalClues: ['没有人站在河道区域。'],
+    clueTexts: [
+      '柯南所在区域没有男性。',
+      '小兰的格子不挨着河道格。',
+      '步美在柯南以西一列，且不在同一区域。',
+      '光彦和唯一站在小径格上的人同区。',
+      '小五郎在河道旁，但不在情人桥。',
+      '阿笠博士在树旁。',
+      '元太在雕像旁。',
+      '灰原和唯一坐在椅子上的人单独同区。',
+      '服部平次是受害者，和犯人单独在同一区域。'
     ]
   },
   {
     id: 'case-10',
-    title: '观光列车渡河前一分钟',
+    title: '迷你高尔夫球场的最后一杆',
+    original: 'Minigolf',
     difficulty: 'hard',
-    size: { rows: 9, columns: 10 },
-    intro: '本案参考 River Crossing 的 9x10 终局结构，改写为观光列车即将过桥前的案件。',
-    rooms: ['train-carpet', 'bridge-metal', 'hotel-carpet', 'hotel-stone'],
-    roomLayout: [
-      'crossing-river crossing-river crossing-river crossing-river crossing-cliffs crossing-cliffs crossing-cliffs crossing-woods crossing-woods crossing-woods',
-      'crossing-river crossing-river crossing-river crossing-river crossing-cliffs crossing-woods crossing-woods crossing-woods crossing-woods crossing-woods',
-      'crossing-river crossing-river crossing-river crossing-cliffs crossing-cliffs crossing-woods crossing-woods crossing-woods crossing-woods crossing-woods',
-      'crossing-river crossing-river crossing-cliffs crossing-cliffs crossing-hunting-cabin crossing-woods crossing-woods crossing-woods crossing-woods crossing-woods',
-      'crossing-river crossing-river crossing-cliffs crossing-hunting-cabin crossing-hunting-cabin crossing-woods crossing-woods crossing-woods crossing-woods crossing-woods',
-      'crossing-river crossing-cliffs crossing-cliffs crossing-woods crossing-hunting-cabin crossing-hunting-cabin crossing-woods crossing-woods crossing-woods crossing-woods',
-      'crossing-river crossing-cliffs crossing-woods crossing-woods crossing-woods crossing-fort crossing-fort crossing-fort crossing-fort crossing-woods',
-      'crossing-river crossing-river crossing-woods crossing-woods crossing-woods crossing-fort crossing-fort crossing-fort crossing-fort crossing-fort',
-      'crossing-river crossing-woods crossing-woods crossing-woods crossing-woods crossing-woods crossing-fort crossing-fort crossing-fort crossing-fort'
+    size: { rows: 10, columns: 10 },
+    keyItems: ['flag', 'chair', 'sand', 'path', 'plant', 'table', 'barrel'],
+    roomLabels: ['入口', '木桶区', '沙坑', '小岛', '步道', '沙丘', '荒漠', '路径', '水障碍'],
+    generalClues: ['正好一人站在桌子旁。', '正好一人站在木桶旁。'],
+    clueTexts: [
+      '柯南正好在旗帜上的某人以南一行。',
+      '小兰坐在椅子上。',
+      '步美不在角落。',
+      '光彦是唯一站在路径格上的人。',
+      '小五郎站在沙坑格上。',
+      '阿笠博士独自一人。',
+      '元太在最上行。',
+      '灰原在花丛旁。',
+      '服部平次和某人独自在荒漠区。',
+      '远山和叶是受害者，和犯人单独在同一区域。'
     ],
-    cellObjects: {
-      '0-8': 'ticket-clip',
-      '1-2': 'observation-rail',
-      '2-9': 'train-seat',
-      '3-4': 'dining-table',
-      '4-7': 'coffee-cup',
-      '5-0': 'map-stand',
-      '6-3': 'luggage-rack',
-      '7-6': 'train-door',
-      '8-1': 'trash-bin',
-      '8-4': 'bench'
-    },
-    support: '柯南',
-    suspects: [
-      { id: 'case10-conductor', name: '秋山车掌', accent: '#264653', room: '一号车厢', object: 'ticket-clip', solutionCell: '0-8', clue: '秋山车掌在第 9 列的验票夹旁。' },
-      { id: 'case10-tourist', name: '星野旅客', accent: '#2a9d8f', room: '观景窗', object: 'observation-rail', solutionCell: '1-2', clue: '星野旅客在第 2 行的观景栏杆旁。' },
-      { id: 'case10-mechanic', name: '井上维修员', accent: '#e9c46a', room: '机械柜', object: 'train-seat', solutionCell: '2-9', clue: '井上维修员在第 10 列检查列车座椅。' },
-      { id: 'case10-sales', name: '矢岛推销员', accent: '#f4a261', room: '餐车', object: 'dining-table', solutionCell: '3-4', clue: '矢岛推销员靠近餐桌。' },
-      { id: 'case10-steward', name: '水岛乘务员', accent: '#e76f51', room: '服务台', object: 'coffee-cup', solutionCell: '4-7', clue: '水岛乘务员端着咖啡杯。' },
-      { id: 'case10-cartographer', name: '八代制图师', accent: '#1d3557', room: '桥梁侧窗', object: 'map-stand', solutionCell: '5-0', clue: '八代制图师展开了地图架。' },
-      { id: 'case10-magician', name: '浅仓魔术师', accent: '#457b9d', room: '行李架', object: 'luggage-rack', solutionCell: '6-3', clue: '浅仓魔术师靠着第 4 列的行李架。' },
-      { id: 'case10-guard', name: '黑岩警备员', accent: '#a8dadc', room: '车门口', object: 'train-door', solutionCell: '7-6', clue: '黑岩警备员守在第 7 列的车门旁。' },
-      { id: 'case10-victim', name: '雾岛社长', accent: '#ffb703', room: '贵宾席', object: 'trash-bin', solutionCell: '8-1', clue: '雾岛社长倒在最后一行的垃圾桶旁。' }
-    ]
+    cast: ['conan', 'ran', 'ayumi', 'mitsuhiko', 'kogoro', 'agasa', 'genta', 'ai', 'heiji', 'kazuha']
   }
 ];
+
+function gcd(a: number, b: number): number {
+  return b === 0 ? a : gcd(b, a % b);
+}
+
+function columnStep(columns: number, seed: number): number {
+  for (const candidate of [5 + (seed % 3), 5, 7, 3, 2, 1]) {
+    if (gcd(candidate, columns) === 1) return candidate;
+  }
+  return 1;
+}
+
+function solutionCells(spec: SourceCaseSpec): `${number}-${number}`[] {
+  const count = spec.clueTexts.length;
+  const step = columnStep(spec.size.columns, Number(spec.id.slice(-2)));
+  const cells = Array.from({ length: count }, (_, index) => `${index}-${(index * step + 1) % spec.size.columns}` as const);
+
+  function swapColumns(left: number, right: number) {
+    const leftColumn = cells[left].split('-')[1];
+    const rightColumn = cells[right].split('-')[1];
+    cells[left] = `${left}-${rightColumn}` as `${number}-${number}`;
+    cells[right] = `${right}-${leftColumn}` as `${number}-${number}`;
+  }
+
+  if (spec.id === 'case-05') swapColumns(1, 2);
+  if (spec.id === 'case-07') swapColumns(2, 4);
+  if (spec.id === 'case-09') swapColumns(2, 4);
+  return cells;
+}
+
+function roomSlugs(spec: SourceCaseSpec): [string, string, string, string, ...string[]] {
+  const base = spec.id;
+  const roomKeys = spec.roomLabels.map((_, index) => `${base}-room-${String.fromCharCode(97 + index)}`);
+  return [...roomKeys, `${base}-final-room`] as unknown as [string, string, string, string, ...string[]];
+}
+
+function roomLayout(spec: SourceCaseSpec, rooms: string[], cells: `${number}-${number}`[]): string[] {
+  if (spec.id === 'case-05') {
+    const [living, dining, guest, bathroom, mainBedroom, kitchen, finalRoom] = rooms;
+    const layout = [
+      [guest, guest, guest, guest, mainBedroom, mainBedroom, mainBedroom, mainBedroom, mainBedroom],
+      [guest, guest, guest, mainBedroom, mainBedroom, mainBedroom, mainBedroom, mainBedroom, mainBedroom],
+      [guest, guest, living, living, living, living, mainBedroom, mainBedroom, mainBedroom],
+      [guest, guest, living, living, living, living, living, mainBedroom, kitchen],
+      [guest, guest, living, living, living, living, living, mainBedroom, kitchen],
+      [bathroom, bathroom, living, living, living, living, living, kitchen, kitchen],
+      [bathroom, bathroom, bathroom, bathroom, bathroom, dining, dining, dining, kitchen],
+      [bathroom, bathroom, bathroom, bathroom, bathroom, dining, dining, dining, kitchen],
+      [bathroom, bathroom, bathroom, bathroom, dining, dining, dining, dining, kitchen]
+    ];
+
+    for (const cellId of [cells[0], cells[cells.length - 1]]) {
+      const [row, column] = cellId.split('-').map(Number);
+      layout[row][column] = finalRoom;
+    }
+
+    return layout.map(roomRow);
+  }
+
+  const layout: string[][] = [];
+  const top = Math.ceil(spec.size.rows * 0.3);
+  const middle = Math.ceil(spec.size.rows * 0.64);
+  const roomCount = spec.roomLabels.length;
+  const roomAt = (index: number) => rooms[Math.min(index, roomCount - 1)];
+
+  for (let row = 0; row < spec.size.rows; row += 1) {
+    const line: string[] = [];
+    for (let column = 0; column < spec.size.columns; column += 1) {
+      let room = roomAt(0);
+      if (row < top) {
+        room = column < Math.ceil(spec.size.columns * 0.46) ? roomAt(0) : roomAt(1);
+      } else if (row < middle) {
+        room = column < Math.ceil(spec.size.columns * 0.24)
+          ? roomAt(2)
+          : column < Math.ceil(spec.size.columns * 0.68)
+            ? roomAt(3)
+            : roomAt(4);
+      } else {
+        room = column < Math.ceil(spec.size.columns * 0.34)
+          ? roomAt(1)
+          : column < Math.ceil(spec.size.columns * 0.66)
+            ? roomAt(2)
+            : roomAt(0);
+      }
+
+      if ((row + column + Number(spec.id.slice(-2))) % 11 === 0) room = roomAt(4);
+      line.push(room);
+    }
+    layout.push(line);
+  }
+
+  for (const cellId of [cells[0], cells[cells.length - 1]]) {
+    const [row, column] = cellId.split('-').map(Number);
+    layout[row][column] = rooms[roomCount];
+  }
+
+  return layout.map(roomRow);
+}
+
+function cellObjects(spec: SourceCaseSpec, cells: `${number}-${number}`[]): Record<`${number}-${number}`, string> {
+  const objects: Record<`${number}-${number}`, string> = {};
+  const targetCount = Math.max(spec.keyItems.length * 3, Math.floor((spec.size.rows * spec.size.columns) / 8));
+  let cursor = Number(spec.id.slice(-2));
+
+  function put(cellId: `${number}-${number}`, object: string) {
+    if (!objects[cellId]) {
+      objects[cellId] = object;
+      return;
+    }
+    for (let offset = 1; offset < spec.size.rows * spec.size.columns; offset += 1) {
+      const row = (Number(cellId.split('-')[0]) + offset) % spec.size.rows;
+      const column = (Number(cellId.split('-')[1]) + offset * 2) % spec.size.columns;
+      const next = `${row}-${column}` as const;
+      if (!objects[next]) {
+        objects[next] = object;
+        return;
+      }
+    }
+  }
+
+  for (let index = 0; index < targetCount; index += 1) {
+    const object = spec.keyItems[index % spec.keyItems.length];
+    const row = (index * 3 + cursor) % spec.size.rows;
+    const column = (index * 5 + cursor * 2) % spec.size.columns;
+    put(`${row}-${column}`, object);
+    cursor += 1;
+  }
+
+  spec.keyItems.forEach((object, index) => put(cells[index % cells.length], object));
+  return objects;
+}
+
+const surpriseVisitorsCarpets = [
+  '1-1',
+  '2-1',
+  '3-0',
+  '3-1',
+  '1-6',
+  '2-6',
+  '2-7',
+  '3-3',
+  '3-4',
+  '3-5',
+  '4-3',
+  '4-4',
+  '4-5',
+  '5-8',
+  '6-8',
+  '7-8'
+] as const;
+
+const surpriseVisitorsObjects = [
+  ['0-0', 'shelf'],
+  ['0-1', 'plant'],
+  ['0-2', 'shelf'],
+  ['0-4', 'table'],
+  ['0-6', 'plant'],
+  ['0-7', 'bed'],
+  ['1-7', 'bed'],
+  ['1-0', 'bed'],
+  ['2-0', 'bed'],
+  ['2-2', 'shelf'],
+  ['2-4', 'tv'],
+  ['2-8', 'chair'],
+  ['3-2', 'shelf'],
+  ['3-6', 'chair'],
+  ['3-8', 'shelf'],
+  ['4-1', 'plant'],
+  ['4-2', 'chair'],
+  ['4-6', 'chair'],
+  ['4-7', 'chair'],
+  ['5-0', 'table'],
+  ['5-5', 'chair'],
+  ['5-6', 'plant'],
+  ['5-7', 'shelf'],
+  ['6-0', 'chair'],
+  ['6-5', 'plant'],
+  ['6-6', 'chair'],
+  ['6-7', 'chair'],
+  ['7-1', 'table'],
+  ['7-5', 'chair'],
+  ['7-6', 'table'],
+  ['8-2', 'shelf'],
+  ['8-7', 'chair']
+] as const;
+
+const floorItems = new Set(['carpet', 'sand', 'path', 'river', 'water']);
+const sceneDecorByOriginal: Record<string, string[]> = {
+  'The Flower Store': ['plant', 'plant', 'table', 'shelf', 'chair'],
+  'The Book Kiosk': ['shelf', 'shelf', 'table', 'trashcan', 'chair'],
+  'The Riding Lesson': ['horse', 'shrub', 'table', 'puddle', 'chair'],
+  'White Wedding': ['plant', 'tree', 'chair', 'table', 'carpet'],
+  'Freezing Rain': ['bed', 'chair', 'puddle', 'table', 'plant'],
+  'A Messy Situation': ['shelf', 'table', 'chair', 'puddle', 'rubble'],
+  'The Abandoned Museum': ['statue', 'rubble', 'table', 'chair', 'shelf'],
+  'Date Night': ['table', 'chair', 'tree', 'statue', 'plant'],
+  Minigolf: ['flag', 'barrel', 'table', 'chair', 'plant']
+};
+
+function overlayVariantFor(spec: SourceCaseSpec, index: number): string {
+  const candidates = spec.keyItems.filter((item) => floorItems.has(item));
+  if (spec.original === 'Date Night') return index % 3 === 0 ? 'river' : index % 3 === 1 ? 'path' : 'carpet';
+  if (spec.original === 'Minigolf') return index % 3 === 0 ? 'sand' : index % 3 === 1 ? 'path' : 'water';
+  if (candidates.length > 0) return candidates[index % candidates.length];
+  return index % 2 === 0 ? 'carpet' : 'floor';
+}
+
+function sceneFor(spec: SourceCaseSpec, logicObjectCount: number): CaseScene {
+  if (spec.id === 'case-05') {
+    return {
+      floorOverlays: surpriseVisitorsCarpets.map((cellId, index) => {
+        const [row, column] = cellId.split('-').map(Number);
+        return { id: `case-05-carpet-${index}`, kind: 'carpet', row, column, variant: 'lavender' };
+      }),
+      objects: surpriseVisitorsObjects.map(([cellId, object], index) => {
+        const [row, column] = cellId.split('-').map(Number);
+        return { id: `case-05-scene-object-${index}`, object, row, column };
+      })
+    };
+  }
+
+  const area = spec.size.rows * spec.size.columns;
+  const overlayCount = Math.max(3, Math.floor(area / 14));
+  const objectPool = [
+    ...spec.keyItems.filter((item) => !floorItems.has(item)),
+    ...(sceneDecorByOriginal[spec.original] ?? ['table', 'chair', 'plant', 'shelf'])
+  ];
+  const objectCount = Math.max(logicObjectCount + 4, Math.floor(area / 4), spec.keyItems.length * 4);
+  const usedCells = new Set<string>();
+
+  return {
+    floorOverlays: Array.from({ length: overlayCount }, (_, index) => {
+      const variant = overlayVariantFor(spec, index);
+      const row = (index * 2 + Number(spec.id.slice(-2))) % spec.size.rows;
+      const column = (index * 3 + Number(spec.id.slice(-2)) + Math.floor(index / 2)) % spec.size.columns;
+      return {
+        id: `${spec.id}-floor-overlay-${index}`,
+        kind: variant === 'carpet' ? 'carpet' : 'floor',
+        row,
+        column,
+        variant
+      };
+    }),
+    objects: Array.from({ length: objectCount }, (_, index) => {
+      const object = objectPool[index % objectPool.length];
+      let row = (index * 3 + Number(spec.id.slice(-2))) % spec.size.rows;
+      let column = (index * 5 + Number(spec.id.slice(-2)) * 2 + Math.floor(index / spec.size.rows)) % spec.size.columns;
+
+      for (let offset = 0; offset < area; offset += 1) {
+        const candidate = `${row}-${column}`;
+        if (!usedCells.has(candidate)) break;
+        row = (row + 1) % spec.size.rows;
+        column = (column + 2) % spec.size.columns;
+      }
+
+      usedCells.add(`${row}-${column}`);
+      return { id: `${spec.id}-scene-object-${index}`, object, row, column };
+    })
+  };
+}
+
+function suspects(spec: SourceCaseSpec, cells: `${number}-${number}`[]): ConanSuspectConfig[] {
+  const cast = (spec.cast ?? defaultCast).slice(0, spec.clueTexts.length).map((key) => castMembers[key]);
+
+  return cast.map((member, index) => ({
+    id: `${spec.id}-${member.key}`,
+    name: member.name,
+    accent: member.accent,
+    portraitKey: member.portraitKey,
+    gender: member.gender,
+    room: index === cast.length - 1 ? '受害者' : spec.roomLabels[index % spec.roomLabels.length],
+    solutionCell: cells[index],
+    clue: ''
+  }));
+}
+
+function toConfig(spec: SourceCaseSpec): ConanCaseConfig {
+  const cells = solutionCells(spec);
+  const rooms = roomSlugs(spec);
+  const caseSuspects = suspects(spec, cells);
+  const objectMap = cellObjects(spec, cells);
+
+  return {
+    id: spec.id,
+    title: spec.title,
+    difficulty: spec.difficulty,
+    size: spec.size,
+    intro: `原作：${spec.original}。按随机抽样重制为柯南项目关卡；尺寸、难度、关键物品和线索文本按原作打印页整理，棋盘物件全部使用 SVG 绘制。`,
+    culpritLabel: '犯人',
+    culpritId: caseSuspects[0].id,
+    rooms,
+    roomLayout: roomLayout(spec, rooms, cells),
+    keyItems: spec.keyItems,
+    cellObjects: objectMap,
+    scene: sceneFor(spec, Object.keys(objectMap).length),
+    clueConstraints: caseSuspects.map((suspect, index) => ({
+      type: 'text',
+      suspectId: suspect.id,
+      text: spec.clueTexts[index]
+    })),
+    generalClues: spec.generalClues,
+    support: '柯南',
+    suspects: caseSuspects
+  };
+}
+
+export const conanRoomNames: Record<string, string> = Object.fromEntries(
+  sourceCases.flatMap((spec) => {
+    const rooms = roomSlugs(spec);
+    return [
+      ...spec.roomLabels.map((label, index) => [rooms[index], label] as const),
+      [rooms[spec.roomLabels.length], '案发单独区域'] as const
+    ];
+  })
+);
+
+const configs: ConanCaseConfig[] = sourceCases.map(toConfig);
 
 export const conanCases: CaseDefinition[] = configs.map(buildConanCase);
