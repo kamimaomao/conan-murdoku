@@ -1,5 +1,6 @@
 import { type CSSProperties, type DragEvent, type PointerEvent, useMemo, useRef, useState } from 'react';
-import { conanLogo, objectAssetFor, roomVisualFor, supportPortraitsFor, suspectPortraitFor } from './assets/conanAssets';
+import { conanHeaderBanner, conanLogo, roomVisualFor, supportPortraitsFor, suspectPortraitFor } from './assets/conanAssets';
+import { BoardObjectSvg, BoardSvgArt } from './components/BoardSvgArt';
 import { cases, casesById } from './data/cases';
 import {
   applyAnswer,
@@ -15,7 +16,7 @@ import { loadProgress, saveProgress, type ProgressState } from './game/storage';
 import type { BoardState, CaseDefinition, CellDefinition, GameState, Suspect, Tool, ValidationResult } from './game/types';
 import { validateBoard } from './game/validation';
 import {
-  caseIntro,
+  caseBriefing,
   caseTitle,
   cellLabel as zhCellLabel,
   difficultyLabels,
@@ -63,6 +64,10 @@ function roomEdgeClasses(cell: CellDefinition, cellsByPosition: Map<string, Cell
   });
 }
 
+function clueReferencedObjects(caseDef: CaseDefinition): Set<string> {
+  return new Set(caseDef.keyItems);
+}
+
 function firstSavedGame(progress: ProgressState): GameState {
   return progress.cases[cases[0].id]?.state ?? createInitialGameState(cases[0].id);
 }
@@ -87,6 +92,7 @@ export default function App() {
   const selectedPortrait = suspectPortraitFor(selectedSuspect);
   const supportPortraits = supportPortraitsFor(currentCase.id);
   const completed = Boolean(progress.cases[currentCase.id]?.completed);
+  const visibleObjects = useMemo(() => clueReferencedObjects(currentCase), [currentCase]);
   const cellsByPosition = useMemo(
     () => new Map(currentCase.cells.map((cell) => [cellPositionKey(cell.row, cell.column), cell])),
     [currentCase]
@@ -208,15 +214,16 @@ export default function App() {
   return (
     <main className="app-shell" aria-label={uiText.appLabel}>
       <header className="case-header">
-        <div>
-          <img className="brand-logo" src={conanLogo} alt="Conan Murdoku" />
+        <img className="legacy-brand-logo" src={conanLogo} alt="" aria-hidden="true" />
+        <img className="brand-banner" src={conanHeaderBanner} alt="名侦探柯南" decoding="async" />
+        <div className="case-title-row">
           <h1>{caseTitle(currentCase)}</h1>
-        </div>
-        <div className="case-meta" aria-label={uiText.caseProgress}>
-          <span>{difficultyLabels[currentCase.difficulty]}</span>
-          <span>
-            {placedCount}/{currentCase.suspects.length}
-          </span>
+          <div className="case-meta" aria-label={uiText.caseProgress}>
+            <span>{difficultyLabels[currentCase.difficulty]}</span>
+            <span>
+              {placedCount}/{currentCase.suspects.length}
+            </span>
+          </div>
         </div>
       </header>
 
@@ -242,7 +249,16 @@ export default function App() {
             ))}
           </div>
         ) : null}
-        <p>{caseIntro(currentCase)}</p>
+        <div className="briefing-copy">
+          <p>{caseBriefing(currentCase)}</p>
+          {currentCase.generalClues.length > 0 ? (
+            <ul className="general-clues">
+              {currentCase.generalClues.map((clue) => (
+                <li key={clue}>{clue}</li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
       </section>
 
       <section
@@ -250,17 +266,18 @@ export default function App() {
         aria-label={uiText.board}
         style={{ gridTemplateColumns: `repeat(${currentCase.size.columns}, minmax(0, 1fr))` }}
       >
+        <BoardSvgArt caseDef={currentCase} />
         {currentCase.cells.map((cell) => {
           const suspect = suspectForCell(currentCase, game.board, cell.id);
           const marked = game.board.marks[cell.id];
-          const objectAsset = objectAssetFor(cell.object);
+          const visibleObject = currentCase.scene ? undefined : cell.object && visibleObjects.has(cell.object) ? cell.object : undefined;
           const roomVisual = roomVisualFor(cell.room);
           const cellClass = [
             'board-cell',
             roomVisual.className,
             ...roomEdgeClasses(cell, cellsByPosition),
             revealedCellId === cell.id ? 'labels-revealed' : '',
-            objectAsset ? 'has-object' : '',
+            visibleObject ? 'has-object' : '',
             suspect ? 'occupied' : marked ? 'marked' : ''
           ]
             .filter(Boolean)
@@ -286,13 +303,13 @@ export default function App() {
               style={cellStyle}
               type="button"
             >
-              {cell.object ? (
-                <span className="cell-object">{objectName(cell.object)}</span>
+              {visibleObject ? (
+                <span className="cell-object">{objectName(visibleObject)}</span>
               ) : (
                 <span className="cell-room">{roomName(cell.room)}</span>
               )}
-              {objectAsset ? (
-                <img className="cell-object-art" src={objectAsset} alt={objectName(cell.object)} />
+              {visibleObject ? (
+                <BoardObjectSvg object={visibleObject} />
               ) : null}
               {marked ? <span className="cell-mark">X</span> : null}
               {suspect ? (

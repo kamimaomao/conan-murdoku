@@ -23,7 +23,10 @@ const hintCase: CaseDefinition = {
   solution: [
     { suspectId: 'ada', cellId: '1-1' },
     { suspectId: 'victim', cellId: '0-0' }
-  ]
+  ],
+  clueConstraints: [],
+  generalClues: [],
+  keyItems: []
 };
 
 describe('board state', () => {
